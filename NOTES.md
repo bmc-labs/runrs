@@ -97,3 +97,8 @@ shutdown_timeout = 0
     shm_size = 0
     network_mtu = 0
 ```
+
+Use the following for generating random runner names/descriptions:
+
+- [physics adjectives](https://github.com/imsky/wordlists/blob/master/adjectives/physics.txt)
+- [startup nouns](https://github.com/imsky/wordlists/blob/master/nouns/startups.txt)
