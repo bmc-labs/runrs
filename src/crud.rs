@@ -145,5 +145,5 @@ pub async fn delete(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
 
     tracing::debug!(desc = "runner written to database", id = runner.id);
 
-    (StatusCode::CREATED, Json(runner.id)).into_response()
+    (StatusCode::OK, Json(runner.id)).into_response()
 }

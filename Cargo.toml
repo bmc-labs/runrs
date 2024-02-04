@@ -13,9 +13,14 @@ dotenv = "0.15.0"
 dotenv_codegen = "0.15.0"
 eyre = "0.6.12"
 jsonwebtoken = "9.2.0"
+mime = "0.3.17"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 sqlx = { version = "0.7.3", features = ["runtime-tokio", "sqlite"] }
 tokio = { version = "1.36.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+
+[dev-dependencies]
+pretty_assertions = "1.4.0"
+tower = "0.4.13"
