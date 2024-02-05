@@ -70,7 +70,7 @@ pub async fn read_one(id: i32, pool: Pool) -> Response {
 
     tracing::debug!(desc = "runner found in database", id = id);
 
-    (StatusCode::FOUND, Json(runner)).into_response()
+    (StatusCode::OK, Json(runner)).into_response()
 }
 
 #[tracing::instrument(skip(pool))]
@@ -96,9 +96,26 @@ pub async fn read_all(pool: Pool) -> Response {
     (StatusCode::OK, Json(runners)).into_response()
 }
 
-#[tracing::instrument(skip(_pool))]
-pub async fn update(State(_pool): State<Pool>, Json(_runner): Json<Runner>) -> Response {
-    unimplemented!()
+#[tracing::instrument(skip(pool))]
+pub async fn update(State(pool): State<Pool>, Json(mut runner): Json<Runner>) -> Response {
+    tracing::info!("updating runner with id {} in database", runner.id);
+    tracing::debug!(runner = ?runner);
+
+    if read_one(runner.id, pool.clone()).await.status() != StatusCode::OK {
+        return create(State(pool), Json(runner)).await;
+    }
+
+    if let Err(err) = runner.save(&pool).await {
+        tracing::debug!(
+            desc = "database responded with error",
+            msg = ?err
+        );
+        return (StatusCode::INTERNAL_SERVER_ERROR, Json(format!("{err:#?}"))).into_response();
+    }
+
+    tracing::debug!(desc = "runner updated in database", id = runner.id);
+
+    (StatusCode::OK, Json(runner.id)).into_response()
 }
 
 #[tracing::instrument(skip(pool))]
