@@ -3,7 +3,7 @@
 use atmosphere::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Schema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Schema, PartialEq, Eq)]
 #[table(schema = "ignored", name = "runners")]
 pub struct Runner {
     #[sql(pk)]
@@ -19,9 +19,10 @@ pub struct Runner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[tokio::test]
-    async fn database_tests() {
+    async fn create_delete() -> eyre::Result<()> {
         let pool = atmosphere::Pool::connect("sqlite::memory:").await.unwrap();
 
         sqlx::migrate!().run(&pool).await.unwrap();
@@ -36,6 +37,15 @@ mod tests {
             run_untagged: false,
         };
 
-        assert!(runner.create(&pool).await.is_ok());
+        assert_eq!(Runner::find(&runner.id, &pool).await?, None);
+        assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
+        assert_eq!(
+            Runner::find(&runner.id, &pool).await?.as_ref(),
+            Some(&runner)
+        );
+        assert_eq!(runner.delete(&pool).await?.rows_affected(), 1);
+        assert_eq!(Runner::find(&runner.id, &pool).await?, None);
+
+        Ok(())
     }
 }

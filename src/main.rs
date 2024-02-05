@@ -12,26 +12,32 @@ async fn main() -> eyre::Result<()> {
     // initialize color eyre and tracing
     setup()?;
 
+    // initialize listener
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+        .await
+        .unwrap();
+
+    tracing::info!("listening on {}", listener.local_addr().unwrap());
+
     // get handle to database
     let pool = atmosphere::Pool::connect(dotenv!("DATABASE_URL")).await?;
 
+    // initialize router
+    let app = app(pool).await?;
+
+    // run app
+    axum::serve(listener, app).await.wrap_err("server stopped")
+}
+
+async fn app(pool: atmosphere::Pool) -> eyre::Result<Router> {
     // set up app routing
-    let app = Router::new()
+    Ok(Router::new()
         .route("/", get(crud::read).post(crud::create))
         .route(
             "/:id",
             get(crud::read).put(crud::update).delete(crud::delete),
         )
-        .with_state(pool);
-
-    // run app
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-        .await
-        .unwrap();
-
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
-
-    axum::serve(listener, app).await.wrap_err("server stopped")
+        .with_state(pool))
 }
 
 /// Initializes backtracing and error handling capabilities. Sets up tracing and task monitoring
@@ -52,4 +58,95 @@ fn setup() -> eyre::Result<()> {
     tracing_subscriber::fmt::init();
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{app, runner::Runner};
+    use axum::{
+        body::Body,
+        http::{self, Request, StatusCode},
+    };
+    use pretty_assertions::assert_eq;
+    use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
+
+    #[tokio::test]
+    async fn create_delete() -> eyre::Result<()> {
+        let pool = atmosphere::Pool::connect("sqlite::memory:").await.unwrap();
+
+        sqlx::migrate!().run(&pool).await.unwrap();
+
+        let runner = Runner {
+            id: 42,
+            url: "https://gitlab.bmc-labs.com".to_owned(),
+            token: "gltok-warblgarbl".to_owned(),
+            description: "Knows the meaning of life".to_owned(),
+            image: "alpine:latest".to_owned(),
+            tag_list: "runnertest,wagarbl".to_owned(),
+            run_untagged: false,
+        };
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::GET)
+                    .uri(&format!("/{}", runner.id))
+                    .body(Body::empty())?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::POST)
+                    .uri("/")
+                    .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+                    .body(Body::from(serde_json::to_string(&runner)?))?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::GET)
+                    .uri(&format!("/{}", runner.id))
+                    .body(Body::empty())?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::FOUND);
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::DELETE)
+                    .uri(&format!("/{}", runner.id))
+                    .body(Body::empty())?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::GET)
+                    .uri(&format!("/{}", runner.id))
+                    .body(Body::empty())?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        Ok(())
+    }
 }
