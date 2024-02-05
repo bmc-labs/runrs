@@ -16,7 +16,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: |
           cargo fmt --check --all
-          cargo clippy --all-targets -- -D warning -D clippy::all
+          cargo clippy --all-targets -- -D warnings -D clippy::all
 
   test:
     runs-on: ubuntu-latest

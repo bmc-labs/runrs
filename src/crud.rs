@@ -9,7 +9,6 @@ use axum::{
     Json,
 };
 
-#[axum::debug_handler]
 #[tracing::instrument(skip(pool))]
 pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) -> Response {
     tracing::info!("writing runner with id {} to database", runner.id);
@@ -28,7 +27,6 @@ pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) ->
     (StatusCode::CREATED, Json(runner.id)).into_response()
 }
 
-#[axum::debug_handler]
 #[tracing::instrument(skip(pool))]
 pub async fn read(id: Option<Path<i32>>, State(pool): State<Pool>) -> Response {
     tracing::info!("reading runner(s) from database");
@@ -98,13 +96,11 @@ pub async fn read_all(pool: Pool) -> Response {
     (StatusCode::OK, Json(runners)).into_response()
 }
 
-#[axum::debug_handler]
 #[tracing::instrument(skip(_pool))]
 pub async fn update(State(_pool): State<Pool>, Json(_runner): Json<Runner>) -> Response {
     unimplemented!()
 }
 
-#[axum::debug_handler]
 #[tracing::instrument(skip(pool))]
 pub async fn delete(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
     tracing::info!("deleting runner with id {id} from database");
