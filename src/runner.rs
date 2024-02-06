@@ -4,7 +4,7 @@ use atmosphere::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Schema, PartialEq, Eq)]
-#[table(schema = "ignored", name = "runners")]
+#[table(schema = "public", name = "runners")]
 pub struct Runner {
     #[sql(pk)]
     pub id: i32,

@@ -67,6 +67,7 @@ mod tests {
         body::Body,
         http::{self, Request, StatusCode},
     };
+    use http_body_util::BodyExt; // for `collect`
     use pretty_assertions::assert_eq;
     use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
 
@@ -121,7 +122,7 @@ mod tests {
             )
             .await?;
 
-        assert_eq!(response.status(), StatusCode::FOUND);
+        assert_eq!(response.status(), StatusCode::OK);
 
         let response = app(pool.clone())
             .await?
@@ -146,6 +147,70 @@ mod tests {
             .await?;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn update() -> eyre::Result<()> {
+        let pool = atmosphere::Pool::connect("sqlite::memory:").await.unwrap();
+
+        sqlx::migrate!().run(&pool).await.unwrap();
+
+        let mut runner = Runner {
+            id: 42,
+            url: "https://gitlab.bmc-labs.com".to_owned(),
+            token: "gltok-warblgarbl".to_owned(),
+            description: "Knows the meaning of life".to_owned(),
+            image: "alpine:latest".to_owned(),
+            tag_list: "runnertest,wagarbl".to_owned(),
+            run_untagged: false,
+        };
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::POST)
+                    .uri("/")
+                    .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+                    .body(Body::from(serde_json::to_string(&runner)?))?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        runner.tag_list = "alpine,latest".to_string();
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::PUT)
+                    .uri(&format!("/{}", runner.id))
+                    .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
+                    .body(Body::from(serde_json::to_string(&runner)?))?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app(pool.clone())
+            .await?
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::GET)
+                    .uri(&format!("/{}", runner.id))
+                    .body(Body::empty())?,
+            )
+            .await?;
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await?.to_bytes();
+        let body: Runner = serde_json::from_slice(&body)?;
+
+        assert_eq!(body, runner);
 
         Ok(())
     }

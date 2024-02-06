@@ -26,5 +26,6 @@ branch = "flrn/enable-sqlite"
 features = ["sqlite"]
 
 [dev-dependencies]
+http-body-util = "0.1.0"
 pretty_assertions = "1.4.0"
 tower = "0.4.13"
