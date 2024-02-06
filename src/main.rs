@@ -13,11 +13,8 @@ async fn main() -> eyre::Result<()> {
     setup()?;
 
     // initialize listener
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-        .await
-        .unwrap();
-
-    tracing::info!("listening on {}", listener.local_addr().unwrap());
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+    tracing::info!("listening on {}", listener.local_addr()?);
 
     // get handle to database
     let pool = atmosphere::Pool::connect(dotenv!("DATABASE_URL")).await?;
@@ -73,32 +70,22 @@ mod tests {
 
     #[tokio::test]
     async fn create_delete() -> eyre::Result<()> {
-        let pool = atmosphere::Pool::connect("sqlite::memory:").await.unwrap();
+        // Set up database and run migrations
+        let pool = atmosphere::Pool::connect("sqlite::memory:").await?;
+        sqlx::migrate!().run(&pool).await?;
 
-        sqlx::migrate!().run(&pool).await.unwrap();
+        // Set up a testing `Runner` and a reusable `Request`
+        let runner = Runner::for_testing();
+        let request = Request::builder()
+            .method(http::Method::GET)
+            .uri(&format!("/{}", runner.id))
+            .body(String::new())?;
 
-        let runner = Runner {
-            id: 42,
-            url: "https://gitlab.bmc-labs.com".to_owned(),
-            token: "gltok-warblgarbl".to_owned(),
-            description: "Knows the meaning of life".to_owned(),
-            image: "alpine:latest".to_owned(),
-            tag_list: "runnertest,wagarbl".to_owned(),
-            run_untagged: false,
-        };
-
-        let response = app(pool.clone())
-            .await?
-            .oneshot(
-                Request::builder()
-                    .method(http::Method::GET)
-                    .uri(&format!("/{}", runner.id))
-                    .body(Body::empty())?,
-            )
-            .await?;
-
+        // Assert that the `Runner` is not in the database using the API call
+        let response = app(pool.clone()).await?.oneshot(request.clone()).await?;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
+        // Insert the `Runner` in the database using the API call and assert `CREATED`
         let response = app(pool.clone())
             .await?
             .oneshot(
@@ -109,21 +96,13 @@ mod tests {
                     .body(Body::from(serde_json::to_string(&runner)?))?,
             )
             .await?;
-
         assert_eq!(response.status(), StatusCode::CREATED);
 
-        let response = app(pool.clone())
-            .await?
-            .oneshot(
-                Request::builder()
-                    .method(http::Method::GET)
-                    .uri(&format!("/{}", runner.id))
-                    .body(Body::empty())?,
-            )
-            .await?;
-
+        // Assert that the `Runner` is in the database using the API call
+        let response = app(pool.clone()).await?.oneshot(request.clone()).await?;
         assert_eq!(response.status(), StatusCode::OK);
 
+        // Delete the `Runner` from the database using the API call and assert `OK`
         let response = app(pool.clone())
             .await?
             .oneshot(
@@ -133,19 +112,10 @@ mod tests {
                     .body(Body::empty())?,
             )
             .await?;
-
         assert_eq!(response.status(), StatusCode::OK);
 
-        let response = app(pool.clone())
-            .await?
-            .oneshot(
-                Request::builder()
-                    .method(http::Method::GET)
-                    .uri(&format!("/{}", runner.id))
-                    .body(Body::empty())?,
-            )
-            .await?;
-
+        // Assert that the `Runner` is not in the database using the API call
+        let response = app(pool.clone()).await?.oneshot(request).await?;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
         Ok(())
@@ -153,20 +123,13 @@ mod tests {
 
     #[tokio::test]
     async fn update() -> eyre::Result<()> {
-        let pool = atmosphere::Pool::connect("sqlite::memory:").await.unwrap();
+        // Set up database, run migrations and set up a testing `Runner`
+        let pool = atmosphere::Pool::connect("sqlite::memory:").await?;
+        sqlx::migrate!().run(&pool).await?;
 
-        sqlx::migrate!().run(&pool).await.unwrap();
+        let mut runner = Runner::for_testing();
 
-        let mut runner = Runner {
-            id: 42,
-            url: "https://gitlab.bmc-labs.com".to_owned(),
-            token: "gltok-warblgarbl".to_owned(),
-            description: "Knows the meaning of life".to_owned(),
-            image: "alpine:latest".to_owned(),
-            tag_list: "runnertest,wagarbl".to_owned(),
-            run_untagged: false,
-        };
-
+        // Create the runner in the database using the API call and assert `CREATED`
         let response = app(pool.clone())
             .await?
             .oneshot(
@@ -180,8 +143,10 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::CREATED);
 
+        // Change field in the `Runner`
         runner.tag_list = "alpine,latest".to_string();
 
+        // Update the `Runner` in the database using the API call and assert `OK`
         let response = app(pool.clone())
             .await?
             .oneshot(
@@ -195,6 +160,7 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
 
+        // Retrieve the `Runner` from the database using the API call and assert `OK`
         let response = app(pool.clone())
             .await?
             .oneshot(
@@ -207,6 +173,7 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
 
+        // Assert that the `Runner` from the response body is the same as the updated `Runner`
         let body = response.into_body().collect().await?.to_bytes();
         let body: Runner = serde_json::from_slice(&body)?;
 
