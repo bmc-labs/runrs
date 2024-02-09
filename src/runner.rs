@@ -43,14 +43,21 @@ mod tests {
 
         let mut runner = Runner::for_testing();
 
-        assert_eq!(Runner::find(&runner.id, &pool).await?, None);
+        assert!(matches!(
+            Runner::find(&runner.id, &pool).await,
+            Err(Error::Query(query::QueryError::NotFound(
+                sqlx::Error::RowNotFound,
+            )))
+        ));
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
-        assert_eq!(
-            Runner::find(&runner.id, &pool).await?.as_ref(),
-            Some(&runner)
-        );
+        assert_eq!(Runner::find(&runner.id, &pool).await?, runner);
         assert_eq!(runner.delete(&pool).await?.rows_affected(), 1);
-        assert_eq!(Runner::find(&runner.id, &pool).await?, None);
+        assert!(matches!(
+            Runner::find(&runner.id, &pool).await,
+            Err(Error::Query(query::QueryError::NotFound(
+                sqlx::Error::RowNotFound,
+            )))
+        ));
 
         Ok(())
     }

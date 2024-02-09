@@ -74,7 +74,7 @@ dependencies = [
 [[package]]
 name = "atmosphere"
 version = "0.1.3"
-source = "git+https://github.com/mara-schulke/atmosphere.git?branch=flrn/enable-sqlite#dc369cef46312c20fd29b120c125a68ac4fe99b4"
+source = "git+https://github.com/bmc-labs/atmosphere.git?branch=main#ba8c17469317cd694ce636a55918ec1f8f048bcd"
 dependencies = [
  "async-trait",
  "atmosphere-core",
@@ -85,7 +85,7 @@ dependencies = [
 [[package]]
 name = "atmosphere-core"
 version = "0.1.3"
-source = "git+https://github.com/mara-schulke/atmosphere.git?branch=flrn/enable-sqlite#dc369cef46312c20fd29b120c125a68ac4fe99b4"
+source = "git+https://github.com/bmc-labs/atmosphere.git?branch=main#ba8c17469317cd694ce636a55918ec1f8f048bcd"
 dependencies = [
  "async-trait",
  "lazy_static",
@@ -97,7 +97,7 @@ dependencies = [
 [[package]]
 name = "atmosphere-macros"
 version = "0.1.3"
-source = "git+https://github.com/mara-schulke/atmosphere.git?branch=flrn/enable-sqlite#dc369cef46312c20fd29b120c125a68ac4fe99b4"
+source = "git+https://github.com/bmc-labs/atmosphere.git?branch=main#ba8c17469317cd694ce636a55918ec1f8f048bcd"
 dependencies = [
  "atmosphere-core",
  "lazy_static",

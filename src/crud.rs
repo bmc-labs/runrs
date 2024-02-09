@@ -44,13 +44,7 @@ pub async fn read_one(id: i32, pool: Pool) -> Response {
     tracing::debug!(id = ?id);
 
     let runner = match Runner::find(&id, &pool).await {
-        Ok(resp) => {
-            let Some(runner) = resp else {
-                tracing::debug!(desc = "internal error", id = id,);
-                return StatusCode::NOT_FOUND.into_response();
-            };
-            runner
-        }
+        Ok(runner) => runner,
         Err(Error::Query(QueryError::NotFound(err))) => {
             tracing::debug!(
                 desc = "runner not found",
@@ -124,13 +118,7 @@ pub async fn delete(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
     tracing::debug!(id = ?id);
 
     let mut runner = match Runner::find(&id, &pool).await {
-        Ok(resp) => {
-            let Some(runner) = resp else {
-                tracing::debug!(desc = "runner not found in database", id = id,);
-                return StatusCode::NOT_FOUND.into_response();
-            };
-            runner
-        }
+        Ok(runner) => runner,
         Err(Error::Query(QueryError::NotFound(err))) => {
             tracing::debug!(
                 desc = "runner not found",
