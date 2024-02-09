@@ -21,8 +21,9 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
 [dependencies.atmosphere]
-git = "https://github.com/mara-schulke/atmosphere.git"
-branch = "flrn/enable-sqlite"
+git = "https://github.com/bmc-labs/atmosphere.git"
+branch = "main"
+default-features = false
 features = ["sqlite"]
 
 [dev-dependencies]
