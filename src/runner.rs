@@ -2,8 +2,9 @@
 
 use atmosphere::prelude::*;
 use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Schema, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Schema, ToSchema, IntoParams())]
 #[table(schema = "public", name = "runners")]
 pub struct Runner {
     #[sql(pk)]
