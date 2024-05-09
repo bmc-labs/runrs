@@ -5,7 +5,6 @@ use crate::runner::Runner;
 
 use atmosphere::prelude::*;
 use atmosphere::query::QueryError;
-use atmosphere::Error;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -19,16 +18,16 @@ use axum::Json;
     ),
     responses(
         (status = StatusCode::CREATED, description = "Created new Runner", body = Runner),
-        (status = StatusCode::CONFLICT, description = "Runner already exists", body = Error),
+        (status = StatusCode::BAD_REQUEST, description = "Runner already exists", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
 #[tracing::instrument(skip(pool))]
 pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) -> Response {
-    tracing::debug!(desc = "writing runner with to database", ?runner);
+    tracing::trace!(?runner, "writing runner with to database");
 
     if let Err(err) = runner.create(&pool).await {
-        tracing::error!(desc = "database responded with error", ?err);
+        tracing::error!(?err, "database responded with error");
         return (StatusCode::INTERNAL_SERVER_ERROR, Json(format!("{err:#?}"))).into_response();
     }
 
@@ -170,6 +169,7 @@ mod tests {
     use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
 
     #[sqlx::test]
+    #[tracing_test::traced_test]
     async fn create_delete(pool: atmosphere::Pool) -> eyre::Result<()> {
         // Set up a testing `Runner` and a reusable `Request`
         let runner = Runner::for_testing();
@@ -219,6 +219,7 @@ mod tests {
     }
 
     #[sqlx::test]
+    #[tracing_test::traced_test]
     async fn update(pool: atmosphere::Pool) -> eyre::Result<()> {
         let mut runner = Runner::for_testing();
 

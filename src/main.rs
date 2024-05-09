@@ -5,10 +5,10 @@ mod rest;
 mod runner;
 
 use dotenv_codegen::dotenv;
-use miette::WrapErr;
+use eyre::WrapErr;
 
 #[tokio::main]
-async fn main() -> miette::Result<()> {
+async fn main() -> eyre::Result<()> {
     // set envvar defaults and init tracing
     tracing_init()?;
 
@@ -22,9 +22,8 @@ async fn main() -> miette::Result<()> {
     axum::serve(listener, app).await.wrap_err("server stopped")
 }
 
-/// Initializes backtracing and error handling capabilities. Sets up tracing and task monitoring
-/// through tokio console.
-fn tracing_init() -> miette::Result<()> {
+/// Initializes backtracing and error handling capabilities.
+fn tracing_init() -> eyre::Result<()> {
     const BT_ENVVAR: &str = "RUST_LIB_BACKTRACE";
     if std::env::var(BT_ENVVAR).is_err() {
         std::env::set_var(BT_ENVVAR, "1")

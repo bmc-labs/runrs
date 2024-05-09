@@ -20,9 +20,9 @@ struct ApiDoc;
 pub async fn app(pool: atmosphere::Pool) -> eyre::Result<Router> {
     // set up app routing
     Ok(Router::new()
-        .route("/", get(handlers::read).post(handlers::create))
+        .route("/runners/", get(handlers::read).post(handlers::create))
         .route(
-            "/:id",
+            "/runners/:id",
             get(handlers::read)
                 .put(handlers::update)
                 .delete(handlers::delete),
