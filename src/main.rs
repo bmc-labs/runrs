@@ -1,8 +1,8 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 mod error;
+mod model;
 mod rest;
-mod runner;
 
 use dotenv_codegen::dotenv;
 use eyre::WrapErr;
@@ -13,7 +13,8 @@ async fn main() -> eyre::Result<()> {
     tracing_init()?;
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
-    tracing::info!("listening on {}", listener.local_addr()?);
+    tracing::info!("REST API on http://{}", listener.local_addr()?);
+    tracing::info!("API docs on http://{}/api-docs", listener.local_addr()?);
 
     let pool = atmosphere::Pool::connect(dotenv!("DATABASE_URL")).await?;
 

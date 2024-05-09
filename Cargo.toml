@@ -14,7 +14,7 @@ jsonwebtoken = "9.2.0"
 mime = "0.3.17"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
-sqlx = { version = "0.7.3", features = ["runtime-tokio", "sqlite"] }
+sqlx = { version = "0.7.3", features = ["runtime-tokio", "sqlite", "migrate"] }
 thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["full"] }
 tracing = "0.1.40"

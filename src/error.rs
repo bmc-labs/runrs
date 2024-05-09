@@ -13,7 +13,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[non_exhaustive]
-enum ErrorType {
+pub enum ErrorType {
     #[error("connection failed")]
     ConnectionFailed,
     #[error("invalid argument")]
@@ -186,11 +186,11 @@ mod tests {
 
     #[test]
     fn error_with_description() {
-        let err = Error::new(ErrorType::Unchanged);
+        let err = Error::new(ErrorType::Unimplemented);
         assert_eq!(&err.msg, "unimplemented");
 
         let desc = "this is a description";
         let err = err.with_description(desc);
-        assert_eq!(&err.msg, "unimplemented: this is a description");
+        assert_eq!(err.msg, format!("unimplemented: {desc}"));
     }
 }

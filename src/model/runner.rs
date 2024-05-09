@@ -1,6 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use atmosphere::prelude::*;
+use atmosphere::{table, Schema, Table as _};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
@@ -15,6 +15,23 @@ pub struct Runner {
     pub image: String,
     pub tag_list: String,
     pub run_untagged: bool,
+}
+
+impl Runner {
+    pub fn update(&mut self, other: Self) -> eyre::Result<()> {
+        if self.id != other.id {
+            eyre::bail!("Cannot update runner with different ID");
+        }
+
+        self.url = other.url;
+        self.token = other.token;
+        self.description = other.description;
+        self.image = other.image;
+        self.tag_list = other.tag_list;
+        self.run_untagged = other.run_untagged;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -34,14 +51,13 @@ impl Runner {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use atmosphere::{query, Create as _, Delete as _, Error, Pool, Read as _, Update as _};
     use pretty_assertions::assert_eq;
 
-    #[tokio::test]
-    async fn create_delete() -> eyre::Result<()> {
-        let pool = atmosphere::Pool::connect("sqlite::memory:").await?;
-        sqlx::migrate!().run(&pool).await?;
+    use super::Runner;
 
+    #[sqlx::test]
+    async fn create_delete(pool: Pool) -> eyre::Result<()> {
         let mut runner = Runner::for_testing();
 
         assert!(matches!(
@@ -59,6 +75,33 @@ mod tests {
                 sqlx::Error::RowNotFound,
             )))
         ));
+
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn update(pool: Pool) -> eyre::Result<()> {
+        let mut runner = Runner::for_testing();
+
+        assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
+
+        runner.url = "https://gitlab.bmc-labs.com".to_string();
+        assert_eq!(runner.save(&pool).await?.rows_affected(), 1);
+        assert_eq!(Runner::find(&runner.id, &pool).await?, runner);
+
+        Ok(())
+    }
+
+    #[sqlx::test]
+    async fn find_all(pool: Pool) -> eyre::Result<()> {
+        assert!(Runner::find_all(&pool).await?.is_empty());
+
+        let mut runner = Runner::for_testing();
+        assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
+
+        assert_eq!(Runner::find_all(&pool).await?, vec![runner.clone()]);
+        assert_eq!(runner.delete(&pool).await?.rows_affected(), 1);
+        assert!(Runner::find_all(&pool).await?.is_empty());
 
         Ok(())
     }
