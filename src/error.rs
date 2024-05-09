@@ -9,8 +9,6 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use utoipa::ToSchema;
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 #[derive(Debug, Error, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[non_exhaustive]
 pub enum ErrorType {
