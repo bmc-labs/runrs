@@ -30,7 +30,7 @@ struct ApiDoc;
 
 pub async fn app(pool: atmosphere::Pool) -> eyre::Result<Router> {
     Ok(Router::new()
-        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", ApiDoc::openapi()))
+        .merge(SwaggerUi::new("/api-docs").url("/api-docs/runrs-api.json", ApiDoc::openapi()))
         .merge(
             Router::new()
                 .route("/runners", post(runners::create))
