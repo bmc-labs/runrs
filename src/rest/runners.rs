@@ -65,7 +65,7 @@ pub async fn list(State(pool): State<Pool>) -> Response {
     get,
     path = "/runners/{id}",
     params(
-        ("id" = i32, Path, description = "Runner ID")
+        ("id" = i64, Path, description = "Runner ID")
     ),
     responses(
         (status = StatusCode::OK, description = "Read all Runners", body = Runner),
@@ -74,7 +74,7 @@ pub async fn list(State(pool): State<Pool>) -> Response {
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn read(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
+pub async fn read(State(pool): State<Pool>, Path(id): Path<i64>) -> Response {
     tracing::info!("reading runner with id {id} from database");
     tracing::debug!(id = ?id);
 
@@ -95,7 +95,7 @@ pub async fn read(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
     put,
     path = "/runners/{id}",
     params(
-        ("id" = i32, Path, description = "Runner ID")
+        ("id" = i64, Path, description = "Runner ID")
     ),
     request_body(
         content = Runner, description = "Runner to update", content_type = "application/json"
@@ -110,7 +110,7 @@ pub async fn read(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
 #[tracing::instrument(skip(pool))]
 pub async fn update(
     State(pool): State<Pool>,
-    Path(id): Path<i32>,
+    Path(id): Path<i64>,
     Json(updated_runner): Json<Runner>,
 ) -> Response {
     tracing::debug!(?id, ?updated_runner, "updating runner");
@@ -142,7 +142,7 @@ pub async fn update(
     delete,
     path = "/runners/{id}",
     params(
-        ("id" = i32, Path, description = "Runner ID")
+        ("id" = i64, Path, description = "Runner ID")
     ),
     responses(
         (status = StatusCode::OK, description = "Deleted Runner", body = Runner),
@@ -151,7 +151,7 @@ pub async fn update(
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn delete(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
+pub async fn delete(State(pool): State<Pool>, Path(id): Path<i64>) -> Response {
     tracing::debug!(?id, "deleting runner with id");
 
     let mut runner = match Runner::find(&id, &pool).await {

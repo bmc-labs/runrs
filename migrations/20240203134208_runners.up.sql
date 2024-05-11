@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS runners (
     description  TEXT    NOT NULL,
     image        TEXT    NOT NULL,
     tag_list     TEXT    NOT NULL,
-    run_untagged BOOLEAN NOT NULL
+    run_untagged BOOLEAN NOT NULL,
+    unique(id, url)
 );
