@@ -12,8 +12,8 @@ use crate::model::Runner;
 #[utoipa::path(
     post,
     path = "/runners",
-    params(
-        Runner
+    request_body(
+        content = Runner, description = "Runner to update", content_type = "application/json"
     ),
     responses(
         (status = StatusCode::CREATED, description = "Created new Runner", body = Runner),
@@ -64,17 +64,17 @@ pub async fn list(State(pool): State<Pool>) -> Response {
 #[utoipa::path(
     get,
     path = "/runners/{id}",
+    params(
+        ("id" = i64, Path, description = "Runner ID")
+    ),
     responses(
         (status = StatusCode::OK, description = "Read all Runners", body = Runner),
         (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
-    ),
-    params(
-        ("id" = i32, Path, description = "Runner ID")
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn read(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
+pub async fn read(State(pool): State<Pool>, Path(id): Path<i64>) -> Response {
     tracing::info!("reading runner with id {id} from database");
     tracing::debug!(id = ?id);
 
@@ -95,22 +95,22 @@ pub async fn read(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
     put,
     path = "/runners/{id}",
     params(
-        Runner
+        ("id" = i64, Path, description = "Runner ID")
+    ),
+    request_body(
+        content = Runner, description = "Runner to update", content_type = "application/json"
     ),
     responses(
         (status = StatusCode::OK, description = "Updated Runner", body = Runner),
         (status = StatusCode::NO_CONTENT, description = "Runner already up-to-date"),
         (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
-    ),
-    params(
-        ("id" = i32, Path, description = "Runner ID")
     )
 )]
 #[tracing::instrument(skip(pool))]
 pub async fn update(
     State(pool): State<Pool>,
-    Path(id): Path<i32>,
+    Path(id): Path<i64>,
     Json(updated_runner): Json<Runner>,
 ) -> Response {
     tracing::debug!(?id, ?updated_runner, "updating runner");
@@ -141,17 +141,17 @@ pub async fn update(
 #[utoipa::path(
     delete,
     path = "/runners/{id}",
+    params(
+        ("id" = i64, Path, description = "Runner ID")
+    ),
     responses(
         (status = StatusCode::OK, description = "Deleted Runner", body = Runner),
         (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
-    ),
-    params(
-        ("id" = i32, Path, description = "Runner ID")
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn delete(State(pool): State<Pool>, Path(id): Path<i32>) -> Response {
+pub async fn delete(State(pool): State<Pool>, Path(id): Path<i64>) -> Response {
     tracing::debug!(?id, "deleting runner with id");
 
     let mut runner = match Runner::find(&id, &pool).await {

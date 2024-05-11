@@ -8,7 +8,7 @@ use utoipa::{IntoParams, ToSchema};
 #[table(schema = "public", name = "runners")]
 pub struct Runner {
     #[sql(pk)]
-    pub id: i32,
+    pub id: i64,
     pub url: String,
     pub token: String,
     pub description: String,
