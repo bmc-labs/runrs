@@ -12,7 +12,7 @@ async fn main() -> eyre::Result<()> {
     // set envvar defaults and init tracing
     tracing_init()?;
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::info!("REST API on http://{}", listener.local_addr()?);
     tracing::info!("API docs on http://{}/api-docs", listener.local_addr()?);
 
