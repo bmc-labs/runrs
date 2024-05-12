@@ -1,9 +1,10 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use crate::model::Runner;
 use atmosphere::Read;
 use eyre::Context;
 use serde::{Deserialize, Serialize};
+
+use crate::model::Runner;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
