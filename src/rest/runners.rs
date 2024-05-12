@@ -7,6 +7,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 
 use crate::error::Error;
+use crate::interfaces::gitlab;
 use crate::model::Runner;
 
 #[utoipa::path(
@@ -31,6 +32,7 @@ pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) ->
     }
 
     tracing::debug!(?runner, "runner written to database");
+    let _ = gitlab::print_cfg_toml(pool).await;
 
     (StatusCode::CREATED, Json(runner)).into_response()
 }
@@ -134,6 +136,7 @@ pub async fn update(
     }
 
     tracing::debug!(?id, ?runner, "runner updated");
+    let _ = gitlab::print_cfg_toml(pool).await;
 
     (StatusCode::OK, Json(runner)).into_response()
 }
@@ -168,6 +171,7 @@ pub async fn delete(State(pool): State<Pool>, Path(id): Path<String>) -> Respons
     }
 
     tracing::debug!(?runner, "runner deleted");
+    let _ = gitlab::print_cfg_toml(pool).await;
 
     (StatusCode::OK, Json(runner)).into_response()
 }
