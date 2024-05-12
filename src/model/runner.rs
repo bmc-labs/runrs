@@ -8,7 +8,7 @@ use utoipa::{IntoParams, ToSchema};
 #[table(schema = "public", name = "runners")]
 pub struct Runner {
     #[sql(pk)]
-    pub id: i64,
+    pub id: String,
     pub url: String,
     pub token: String,
     pub description: String,
@@ -38,7 +38,7 @@ impl Runner {
 impl Runner {
     pub fn for_testing() -> Self {
         Runner {
-            id: 42,
+            id: "42".to_string(),
             url: "https://gitlab.your-company.com".to_string(),
             token: "gltok-warblgarbl".to_string(),
             description: "Knows the meaning of life".to_string(),
