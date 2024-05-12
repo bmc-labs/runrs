@@ -25,24 +25,16 @@ pub struct RunnerConfig {
     pub token: String,
     pub executor: String,
     pub description: Option<String>,
-    pub image: String,
     pub tag_list: Vec<String>,
     pub run_untagged: bool,
     pub shell: Option<String>,
-    pub docker_image: Option<String>, // needs be in [runners.docker] section
-    pub volumes: Vec<String>,
-    pub environment: Vec<String>,
+    pub docker: DockerConfig,
 }
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct DockerConfig {
-//     pub tls_verify: Option<bool>,
-//     pub image: String,
-//     pub privileged: bool,
-//     pub disable_cache: Option<bool>,
-//     pub volumes: Vec<String>,
-//     pub shm_size: Option<i32>,
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DockerConfig {
+    pub image: String,
+}
 
 pub async fn print_cfg_toml(pool: atmosphere::Pool) -> eyre::Result<()> {
     let runners = get_runners(pool).await?;
@@ -72,13 +64,12 @@ async fn create_runner_config(runners: Vec<Runner>) -> eyre::Result<Vec<RunnerCo
                 token: runner.token,
                 executor: "docker".to_owned(),
                 description: Some(runner.description),
-                image: runner.image,
                 tag_list: runner.tag_list.split(',').map(String::from).collect(),
                 run_untagged: runner.run_untagged,
                 shell: Some("bash".to_owned()), // Default shell
-                docker_image: Some("alpine:latest".to_owned()),
-                volumes: vec!["/cache".to_owned()],
-                environment: vec!["RUST_BACKTRACE=1".to_owned()],
+                docker: DockerConfig {
+                    image: runner.image.to_owned(),
+                },
             }
         })
         .collect();
