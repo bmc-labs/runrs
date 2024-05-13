@@ -8,6 +8,7 @@ use crate::model::Runner;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
+    #[serde(flatten)]
     pub global: GlobalConfig,
     pub runners: Vec<RunnerConfig>,
 }
