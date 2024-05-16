@@ -84,5 +84,5 @@ fn write_config_toml(glcfg: GlobalConfig, runners_cfg: Vec<RunnerConfig>) {
         runners: runners_cfg,
     };
     let config_toml: String = toml::to_string_pretty(&config).expect("Failed serializing config");
-    println!("Config toml {}", config_toml);
+    println!("Config toml \n\n{}", config_toml);
 }
