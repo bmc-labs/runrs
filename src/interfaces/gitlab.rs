@@ -38,6 +38,25 @@ pub struct DockerConfig {
     pub image: String,
 }
 
+impl From<Runner> for RunnerConfig {
+    fn from(r: Runner) -> Self {
+        RunnerConfig {
+            id: r.id,
+            name: "runner".to_owned(),
+            url: r.url,
+            token: r.token,
+            executor: "docker".to_owned(),
+            description: Some(r.description),
+            tag_list: r.tag_list.split(',').map(String::from).collect(),
+            run_untagged: r.run_untagged,
+            shell: Some("bash".to_owned()), // Default shell
+            docker: DockerConfig {
+                image: r.image.to_owned(),
+            },
+        }
+    }
+}
+
 pub async fn print_cfg_toml(pool: atmosphere::Pool) -> eyre::Result<()> {
     let runners = get_runners(pool).await?;
     let global_config = GlobalConfig {
@@ -56,25 +75,7 @@ async fn get_runners(pool: atmosphere::Pool) -> eyre::Result<Vec<Runner>> {
 }
 
 async fn create_runner_config(runners: Vec<Runner>) -> eyre::Result<Vec<RunnerConfig>> {
-    let configs = runners
-        .into_iter()
-        .map(|runner| {
-            RunnerConfig {
-                id: runner.id,
-                name: "runner".to_owned(),
-                url: runner.url,
-                token: runner.token,
-                executor: "docker".to_owned(),
-                description: Some(runner.description),
-                tag_list: runner.tag_list.split(',').map(String::from).collect(),
-                run_untagged: runner.run_untagged,
-                shell: Some("bash".to_owned()), // Default shell
-                docker: DockerConfig {
-                    image: runner.image.to_owned(),
-                },
-            }
-        })
-        .collect();
+    let configs = runners.into_iter().map(RunnerConfig::from).collect();
     Ok(configs)
 }
 
