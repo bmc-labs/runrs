@@ -10,6 +10,26 @@ use crate::app_state::AppState;
 use crate::error::Error;
 use crate::model::{GitLabRunner, GitLabRunnerConfig};
 
+async fn rewrite_config_file(app_state: &AppState) -> Result<(), Error> {
+    match GitLabRunnerConfig::new(&app_state.pool).await {
+        Ok(config) => {
+            if let Err(err) = config.write(&app_state.gitlab_runner_config_path).await {
+                tracing::error!(?err, "Error in writing config.toml");
+                return Err(Error::internal_error(
+                    "GitLab Runner config.toml could not be written.",
+                ));
+            }
+        }
+        Err(err) => {
+            tracing::error!(?err, "Could not create a GitLabRunnerConfig");
+            return Err(Error::internal_error(
+                "Could not create a GitLabRunnerConfig",
+            ));
+        }
+    }
+    Ok(())
+}
+
 #[utoipa::path(
     post,
     path = "/runners",
@@ -153,6 +173,7 @@ pub async fn update(
     }
     tracing::debug!("GitLabRunnerConfig written to disk");
 
+    let _ = rewrite_config_file(&app_state).await;
     (StatusCode::OK, Json(runner)).into_response()
 }
 
