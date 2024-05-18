@@ -7,16 +7,40 @@ use serde::{Deserialize, Serialize};
 use crate::model::Runner;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
+pub struct GitLabRunnerConfig {
     #[serde(flatten)]
-    pub global: GlobalConfig,
-    pub runners: Vec<RunnerConfig>,
+    pub global_section: GlobalSection,
+    pub runners: Vec<Runners>,
+}
+
+impl Config {
+    pub fn new() -> eyre::Result<Self> {
+        let global_section = GlobalSection::default();
+        let runners = Runner::find_all(...).await;
+
+        Self { global_section, runners }
+    }
+    
+    pub async fn write(&self) -> eyre::Result<()> {
+        let config_toml = toml::to_string_pretty(self).wrap_err("Failed serializing config")?;
+        
+        println!("Config toml \n\n{}", config_toml);
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GlobalConfig {
-    pub concurrent: i32,
-    pub check_interval: i32,
+pub struct GlobalSection {
+    pub concurrent: u32,
+    pub check_interval: u32,
+}
+
+impl Default for GlobalSection {
+    fn default() -> Self {
+        Self {
+            concurrent: 4,
+            check_interval: 3,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -55,35 +79,4 @@ impl From<Runner> for RunnerConfig {
             },
         }
     }
-}
-
-pub async fn print_cfg_toml(pool: atmosphere::Pool) -> eyre::Result<()> {
-    let runners = get_runners(pool).await?;
-    let global_config = GlobalConfig {
-        concurrent: 4,
-        check_interval: 3,
-    };
-    let runner_config: Vec<RunnerConfig> = create_runner_config(runners).await?;
-    write_config_toml(global_config, runner_config);
-    Ok(())
-}
-
-async fn get_runners(pool: atmosphere::Pool) -> eyre::Result<Vec<Runner>> {
-    Runner::find_all(&pool)
-        .await
-        .wrap_err("Failed to retrieve runners from database")
-}
-
-async fn create_runner_config(runners: Vec<Runner>) -> eyre::Result<Vec<RunnerConfig>> {
-    let configs = runners.into_iter().map(RunnerConfig::from).collect();
-    Ok(configs)
-}
-
-fn write_config_toml(glcfg: GlobalConfig, runners_cfg: Vec<RunnerConfig>) {
-    let config = Config {
-        global: glcfg,
-        runners: runners_cfg,
-    };
-    let config_toml: String = toml::to_string_pretty(&config).expect("Failed serializing config");
-    println!("Config toml \n\n{}", config_toml);
 }
