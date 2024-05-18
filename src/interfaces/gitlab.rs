@@ -14,9 +14,9 @@ pub struct GitLabRunnerConfig {
 }
 
 impl Config {
-    pub fn new() -> eyre::Result<Self> {
+    pub async fn new() -> eyre::Result<Self> {
         let global_section = GlobalSection::default();
-        let runners = Runner::find_all(...).await;
+        let runners = Runner::find_all(...).await.wrap_err("warbl")?;
 
         Self { global_section, runners }
     }
