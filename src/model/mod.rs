@@ -3,3 +3,4 @@
 mod runner;
 
 pub use runner::Runner;
+pub use runner::GitLabRunnerConfig;

@@ -7,10 +7,6 @@ mod rest;
 
 pub(crate) static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
-mod interfaces {
-    pub mod gitlab;
-}
-
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     // set envvar defaults and init tracing

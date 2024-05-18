@@ -7,8 +7,8 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 
 use crate::error::Error;
-use crate::interfaces::gitlab;
 use crate::model::Runner;
+use crate::model::GitLabRunnerConfig;
 
 #[utoipa::path(
     post,
@@ -33,7 +33,7 @@ pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) ->
 
     tracing::debug!(?runner, "runner written to database");
 
-    match GitLabRunnerConfig::new().await {
+    match GitLabRunnerConfig::new(pool).await {
         Ok(config) => {
             if let Err(err) = config.write(/* path */).await {
                 // error handling
