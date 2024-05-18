@@ -1,7 +1,7 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use atmosphere::Read;
-use eyre::Context;
+use eyre::{Context, Ok};
 use serde::{Deserialize, Serialize};
 
 use crate::model::Runner;
@@ -10,21 +10,25 @@ use crate::model::Runner;
 pub struct GitLabRunnerConfig {
     #[serde(flatten)]
     pub global_section: GlobalSection,
-    pub runners: Vec<Runners>,
+    pub runners: Vec<Runner>,
 }
 
-impl Config {
-    pub async fn new() -> eyre::Result<Self> {
+impl GitLabRunnerConfig {
+    pub async fn new(pool: atmosphere::Pool) -> eyre::Result<Self> {
         let global_section = GlobalSection::default();
-        let runners = Runner::find_all(...).await.wrap_err("warbl")?;
-
-        Self { global_section, runners }
+        let runners = Runner::find_all(&pool)
+            .await
+            .wrap_err("Failed to retreive Runners")?;
+        Ok(Self {
+            global_section,
+            runners,
+        })
     }
-    
+
     pub async fn write(&self) -> eyre::Result<()> {
         let config_toml = toml::to_string_pretty(self).wrap_err("Failed serializing config")?;
-        
         println!("Config toml \n\n{}", config_toml);
+        Ok(())
     }
 }
 
