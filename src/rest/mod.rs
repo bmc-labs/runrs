@@ -7,6 +7,7 @@ use axum::Router;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
+use crate::app_state::AppState;
 use crate::{error, model};
 
 #[derive(OpenApi)]
@@ -16,7 +17,7 @@ use crate::{error, model};
         schemas(
             error::Error,
             error::ErrorType,
-            model::Runner
+            model::GitLabRunner
         )
     ),
     tags(
@@ -28,7 +29,7 @@ use crate::{error, model};
 )]
 struct ApiDoc;
 
-pub async fn app(pool: atmosphere::Pool) -> eyre::Result<Router> {
+pub async fn app(app_state: AppState) -> eyre::Result<Router> {
     Ok(Router::new()
         .merge(SwaggerUi::new("/api-docs").url("/api-docs/runrs-api.json", ApiDoc::openapi()))
         .merge(
@@ -42,5 +43,5 @@ pub async fn app(pool: atmosphere::Pool) -> eyre::Result<Router> {
                         .delete(runners::delete),
                 ),
         )
-        .with_state(pool))
+        .with_state(app_state))
 }

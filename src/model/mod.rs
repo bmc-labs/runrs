@@ -1,6 +1,7 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-mod runner;
+mod gitlab_runner;
+mod gitlab_runner_config;
 
-pub use runner::Runner;
-pub use runner::GitLabRunnerConfig;
+pub use gitlab_runner::GitLabRunner;
+pub use gitlab_runner_config::GitLabRunnerConfig;
