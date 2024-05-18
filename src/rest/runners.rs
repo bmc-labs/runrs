@@ -32,8 +32,20 @@ pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) ->
     }
 
     tracing::debug!(?runner, "runner written to database");
-    let _ = gitlab::print_cfg_toml(pool).await;
 
+    match GitLabRunnerConfig::new().await {
+        Ok(config) => {
+            if let Err(err) = config.write(/* path */).await {
+                // error handling
+                return Error::from(/* bla */);
+            }
+        }
+        Err(err) => {
+            // error handling
+            return /* Error */
+        }
+    }
+    
     (StatusCode::CREATED, Json(runner)).into_response()
 }
 
