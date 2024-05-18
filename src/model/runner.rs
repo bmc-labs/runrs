@@ -1,5 +1,9 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::Path;
+
 use atmosphere::{table, Read, Schema, Table as _};
 use eyre::{Context, Ok};
 use serde::{Deserialize, Serialize};
@@ -54,9 +58,20 @@ impl GitLabRunnerConfig {
         })
     }
 
-    pub async fn write(&self) -> eyre::Result<()> {
+    pub async fn write(&self, path: String) -> eyre::Result<()> {
         let config_toml = toml::to_string_pretty(self).wrap_err("Failed serializing config")?;
         println!("Config toml \n\n{}", config_toml);
+
+        let config_path = Path::new(&path);
+        if let Some(parent) = config_path.parent() {
+            if !parent.exists() {
+                fs::create_dir_all(parent)
+                    .expect("Failed to create directories for the config.toml");
+            }
+        }
+        let mut file = File::create(&path).expect("Failed to create config.toml file.");
+        file.write_all(config_toml.as_bytes())
+            .expect("Failed to write to config.toml");
         Ok(())
     }
 }

@@ -7,8 +7,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 
 use crate::error::Error;
-use crate::model::Runner;
-use crate::model::GitLabRunnerConfig;
+use crate::model::{GitLabRunnerConfig, Runner};
 
 #[utoipa::path(
     post,
@@ -33,19 +32,22 @@ pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) ->
 
     tracing::debug!(?runner, "runner written to database");
 
+    let cfg_path =
+        std::env::var("RUNNERS_CONFIG_PATH").expect("RUNNERS_CONFIG_PATH not set in .env file");
+
     match GitLabRunnerConfig::new(pool).await {
         Ok(config) => {
-            if let Err(err) = config.write(/* path */).await {
-                // error handling
-                return Error::from(/* bla */);
+            if let Err(err) = config.write(cfg_path).await {
+                tracing::error!(?err, "database responded with error");
+                return Error::from(err).into();
             }
         }
         Err(err) => {
-            // error handling
-            return /* Error */
+            tracing::error!(?err);
+            return Error::from(err).into_response();
         }
     }
-    
+
     (StatusCode::CREATED, Json(runner)).into_response()
 }
 
