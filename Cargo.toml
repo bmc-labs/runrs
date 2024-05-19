@@ -26,6 +26,7 @@ utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
 http-body-util = "0.1.0"
 pretty_assertions = "1.4.0"
 tower = "0.4.13"
+uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
 
 [profile.release]
 lto = "thin"

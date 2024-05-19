@@ -20,6 +20,17 @@ impl AppState {
     }
 }
 
+#[cfg(test)]
+impl AppState {
+    pub fn for_testing(pool: atmosphere::Pool) -> Self {
+        let config_path_str = format!("/tmp/gitlab-runner-config-{}.toml", uuid::Uuid::new_v4());
+        Self {
+            pool,
+            config_path: PathBuf::from(config_path_str),
+        }
+    }
+}
+
 async fn init_database() -> eyre::Result<atmosphere::Pool> {
     let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
         tracing::warn!("DATABASE_URL not set, using in-memory database");
