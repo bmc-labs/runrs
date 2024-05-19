@@ -56,7 +56,7 @@ mod tests {
 
     use super::Runner;
 
-    #[sqlx::test]
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn create_delete(pool: Pool) -> eyre::Result<()> {
         let mut runner = Runner::for_testing();
 
@@ -79,7 +79,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test]
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn update(pool: Pool) -> eyre::Result<()> {
         let mut runner = Runner::for_testing();
 
@@ -92,7 +92,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test]
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn find_all(pool: Pool) -> eyre::Result<()> {
         assert!(Runner::find_all(&pool).await?.is_empty());
 

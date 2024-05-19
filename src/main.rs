@@ -2,40 +2,45 @@
 
 mod error;
 mod model;
+mod monitoring;
 mod rest;
 
-use dotenv_codegen::dotenv;
-use eyre::WrapErr;
+pub(crate) static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     // set envvar defaults and init tracing
-    tracing_init()?;
+    monitoring::init()?;
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::info!("REST API on http://{}", listener.local_addr()?);
     tracing::info!("API docs on http://{}/api-docs", listener.local_addr()?);
 
-    let pool = atmosphere::Pool::connect(dotenv!("DATABASE_URL")).await?;
+    let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+        tracing::warn!("DATABASE_URL not set, using in-memory database");
+        "sqlite::memory:".to_string()
+    });
+
+    let pool = match atmosphere::Pool::connect(&database_url).await {
+        Ok(pool) => pool,
+        Err(err) => {
+            tracing::error!(%err, "Failed to connect to database");
+            eyre::bail!(err);
+        }
+    };
+
+    if let Err(err) = MIGRATOR.run(&pool).await {
+        tracing::error!(%err, "Failed to run migrations");
+        eyre::bail!(err);
+    }
 
     // initialize router and run app
     let app = rest::app(pool).await?;
-    axum::serve(listener, app).await.wrap_err("server stopped")
-}
 
-/// Initializes backtracing and error handling capabilities.
-fn tracing_init() -> eyre::Result<()> {
-    const BT_ENVVAR: &str = "RUST_LIB_BACKTRACE";
-    if std::env::var(BT_ENVVAR).is_err() {
-        std::env::set_var(BT_ENVVAR, "1")
+    if let Err(err) = axum::serve(listener, app).await {
+        tracing::error!(%err, "Server stopped");
+        eyre::bail!(err);
     }
-
-    // set up format layer with filtering for tracing
-    const LG_ENVVAR: &str = "RUST_LOG";
-    if std::env::var(LG_ENVVAR).is_err() {
-        std::env::set_var(LG_ENVVAR, "debug")
-    }
-    tracing_subscriber::fmt::init();
 
     Ok(())
 }

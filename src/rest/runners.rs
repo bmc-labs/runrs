@@ -183,7 +183,7 @@ mod tests {
     use crate::model::Runner;
     use crate::rest::app; // for `call`, `oneshot`, and `ready`
 
-    #[sqlx::test]
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
     async fn create_delete(pool: atmosphere::Pool) -> eyre::Result<()> {
         let runner = Runner::for_testing();
@@ -227,7 +227,7 @@ mod tests {
         Ok(())
     }
 
-    #[sqlx::test]
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
     async fn update(pool: atmosphere::Pool) -> eyre::Result<()> {
         let mut runner = Runner::for_testing();
