@@ -1,5 +1,5 @@
 -- Copyright 2024 bmc::labs GmbH. All rights reserved.
-CREATE TABLE IF NOT EXISTS runners (
+CREATE TABLE IF NOT EXISTS gitlab_runners (
     id           TEXT PRIMARY KEY,
     url          TEXT NOT NULL,
     token        TEXT UNIQUE NOT NULL,

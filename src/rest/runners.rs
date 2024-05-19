@@ -1,13 +1,14 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use atmosphere::{Create as _, Delete as _, Pool, Read as _, Update as _};
+use atmosphere::{Create as _, Delete as _, Read as _, Update as _};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 
+use crate::app_state::AppState;
 use crate::error::Error;
-use crate::model::Runner;
+use crate::model::{GitLabRunner, GitLabRunnerConfig};
 
 #[utoipa::path(
     post,
@@ -22,15 +23,23 @@ use crate::model::Runner;
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) -> Response {
+pub async fn create(
+    State(AppState { pool, config_path }): State<AppState>,
+    Json(mut runner): Json<GitLabRunner>,
+) -> Response {
     tracing::debug!(?runner, "creating runner in database");
 
     if let Err(err) = runner.create(&pool).await {
         tracing::error!(?err, "database responded with error");
         return Error::from(err).into();
     }
-
     tracing::debug!(?runner, "runner written to database");
+
+    if let Err(err) = GitLabRunnerConfig::write(&pool, &config_path).await {
+        tracing::error!(?err, "Error in writing config.toml");
+        return Error::internal_error("unable to write to runner config").into();
+    }
+    tracing::debug!("GitLabRunnerConfig written to disk");
 
     (StatusCode::CREATED, Json(runner)).into_response()
 }
@@ -45,10 +54,10 @@ pub async fn create(State(pool): State<Pool>, Json(mut runner): Json<Runner>) ->
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn list(State(pool): State<Pool>) -> Response {
+pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Response {
     tracing::debug!("reading all runners from database");
 
-    let runners = match Runner::find_all(&pool).await {
+    let runners = match GitLabRunner::find_all(&pool).await {
         Ok(runners) => runners,
         Err(err) => {
             tracing::debug!(?err, "database responded with error");
@@ -74,11 +83,14 @@ pub async fn list(State(pool): State<Pool>) -> Response {
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn read(State(pool): State<Pool>, Path(id): Path<String>) -> Response {
+pub async fn read(
+    State(AppState { pool, .. }): State<AppState>,
+    Path(id): Path<String>,
+) -> Response {
     tracing::info!("reading runner with id {id} from database");
     tracing::debug!(id = ?id);
 
-    let runner = match Runner::find(&id, &pool).await {
+    let runner = match GitLabRunner::find(&id, &pool).await {
         Ok(runner) => runner,
         Err(err) => {
             tracing::debug!(?err, "database responded with error");
@@ -109,13 +121,13 @@ pub async fn read(State(pool): State<Pool>, Path(id): Path<String>) -> Response 
 )]
 #[tracing::instrument(skip(pool))]
 pub async fn update(
-    State(pool): State<Pool>,
+    State(AppState { pool, config_path }): State<AppState>,
     Path(id): Path<String>,
-    Json(updated_runner): Json<Runner>,
+    Json(updated_runner): Json<GitLabRunner>,
 ) -> Response {
     tracing::debug!(?id, ?updated_runner, "updating runner");
 
-    let mut runner = match Runner::find(&id, &pool).await {
+    let mut runner = match GitLabRunner::find(&id, &pool).await {
         Ok(runner) => runner,
         Err(err) => {
             tracing::error!(?err, "database responded with error");
@@ -135,6 +147,12 @@ pub async fn update(
 
     tracing::debug!(?id, ?runner, "runner updated");
 
+    if let Err(err) = GitLabRunnerConfig::write(&pool, &config_path).await {
+        tracing::error!(?err, "Error in writing config.toml");
+        return Error::internal_error("unable to write to runner config").into();
+    }
+    tracing::debug!("GitLabRunnerConfig written to disk");
+
     (StatusCode::OK, Json(runner)).into_response()
 }
 
@@ -151,10 +169,13 @@ pub async fn update(
     )
 )]
 #[tracing::instrument(skip(pool))]
-pub async fn delete(State(pool): State<Pool>, Path(id): Path<String>) -> Response {
+pub async fn delete(
+    State(AppState { pool, config_path }): State<AppState>,
+    Path(id): Path<String>,
+) -> Response {
     tracing::debug!(?id, "deleting runner with id");
 
-    let mut runner = match Runner::find(&id, &pool).await {
+    let mut runner = match GitLabRunner::find(&id, &pool).await {
         Ok(runner) => runner,
         Err(err) => {
             tracing::debug!(?err, "database responded with error");
@@ -166,8 +187,13 @@ pub async fn delete(State(pool): State<Pool>, Path(id): Path<String>) -> Respons
         tracing::debug!(?err, "database responded with error");
         return Error::from(err).into();
     }
-
     tracing::debug!(?runner, "runner deleted");
+
+    if let Err(err) = GitLabRunnerConfig::write(&pool, &config_path).await {
+        tracing::error!(?err, "Error in writing config.toml");
+        return Error::internal_error("unable to write to runner config").into();
+    }
+    tracing::debug!("GitLabRunnerConfig written to disk");
 
     (StatusCode::OK, Json(runner)).into_response()
 }
@@ -180,22 +206,28 @@ mod tests {
     use pretty_assertions::assert_eq;
     use tower::ServiceExt;
 
-    use crate::model::Runner;
+    use crate::app_state::AppState;
+    use crate::model::GitLabRunner;
     use crate::rest::app; // for `call`, `oneshot`, and `ready`
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
     async fn create_delete(pool: atmosphere::Pool) -> eyre::Result<()> {
-        let runner = Runner::for_testing();
+        let app_state = AppState::for_testing(pool);
+
+        let runner = GitLabRunner::for_testing();
         let request = Request::builder()
             .method(http::Method::GET)
             .uri(&format!("/runners/{}", runner.id))
             .body(String::new())?;
 
-        let response = app(pool.clone()).await?.oneshot(request.clone()).await?;
+        let response = app(app_state.clone())
+            .await?
+            .oneshot(request.clone())
+            .await?;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
-        let response = app(pool.clone())
+        let response = app(app_state.clone())
             .await?
             .oneshot(
                 Request::builder()
@@ -207,10 +239,13 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::CREATED);
 
-        let response = app(pool.clone()).await?.oneshot(request.clone()).await?;
+        let response = app(app_state.clone())
+            .await?
+            .oneshot(request.clone())
+            .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let response = app(pool.clone())
+        let response = app(app_state.clone())
             .await?
             .oneshot(
                 Request::builder()
@@ -221,8 +256,10 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let response = app(pool.clone()).await?.oneshot(request).await?;
+        let response = app(app_state.clone()).await?.oneshot(request).await?;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        std::fs::remove_file(&app_state.config_path)?;
 
         Ok(())
     }
@@ -230,11 +267,13 @@ mod tests {
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
     async fn update(pool: atmosphere::Pool) -> eyre::Result<()> {
-        let mut runner = Runner::for_testing();
-        runner.save(&pool).await?;
+        let app_state = AppState::for_testing(pool);
+
+        let mut runner = GitLabRunner::for_testing();
+        runner.save(&app_state.pool).await?;
 
         runner.url = "https://gitlab.bmc-labs.com".to_string();
-        let response = app(pool.clone())
+        let response = app(app_state.clone())
             .await?
             .oneshot(
                 Request::builder()
@@ -246,8 +285,10 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let runner_from_db = Runner::find(&runner.id, &pool).await?;
+        let runner_from_db = GitLabRunner::find(&runner.id, &app_state.pool).await?;
         assert_eq!(runner_from_db, runner);
+
+        std::fs::remove_file(&app_state.config_path)?;
 
         Ok(())
     }
