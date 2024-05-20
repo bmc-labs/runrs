@@ -1,9 +1,8 @@
-name: CI
+name: Checks
 
 on:
-  push:
-    branches: ["trunk"]
   pull_request:
+    branches: [ trunk ]
 
 jobs:
   lint:
@@ -33,12 +32,3 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: crate-ci/typos@v1.18.0
-
-  docker:
-    runs-on: ubuntu-latest
-    needs: [lint, test, typos]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix build .#runrs-docker-image

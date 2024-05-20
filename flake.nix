@@ -57,6 +57,11 @@
           inherit cargoArtifacts;
         });
 
+        runrs-fmt = craneLib.cargoFmt (commonArgs // {
+          inherit cargoArtifacts;
+          rustFmtExtraArgs = "--check --all";
+        });
+
         runrs-clippy = craneLib.cargoClippy (commonArgs // {
           inherit cargoArtifacts;
           cargoClippyExtraArgs = "--all-targets -- --deny warnings -- deny clippy::all";
@@ -67,7 +72,7 @@
         });
 
         runrs-docker-image = pkgs.dockerTools.buildLayeredImage {
-          name = "runrs";
+          name = "ghcr.io/runrs";
           tag = "latest";
           contents = with pkgs.dockerTools; [
             usrBinEnv
@@ -90,7 +95,7 @@
         };
 
         checks = {
-          inherit runrs runrs-clippy runrs-nextest;
+          inherit runrs runrs-fmt runrs-clippy runrs-nextest;
         };
 
         devShells.default = pkgs.mkShell {
