@@ -64,7 +64,7 @@
 
         runrs-clippy = craneLib.cargoClippy (commonArgs // {
           inherit cargoArtifacts;
-          cargoClippyExtraArgs = "--all-targets -- --deny warnings -- deny clippy::all";
+          cargoClippyExtraArgs = "--all-targets --no-deps -- --deny warnings -- deny clippy::all";
         });
 
         runrs-nextest = craneLib.cargoNextest (commonArgs // {
@@ -72,7 +72,7 @@
         });
 
         runrs-docker-image = pkgs.dockerTools.buildLayeredImage {
-          name = "ghcr.io/runrs";
+          name = "ghcr.io/bmc-labs/runrs";
           tag = "latest";
           contents = with pkgs.dockerTools; [
             usrBinEnv

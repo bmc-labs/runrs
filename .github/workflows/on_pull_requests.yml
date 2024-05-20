@@ -14,7 +14,7 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --check --all
-      - run: cargo clippy --all-targets -- -D warnings -D clippy::all
+      - run: cargo clippy --all-targets --no-deps -- -D warnings -D clippy::all
 
   test:
     runs-on: ubuntu-latest
