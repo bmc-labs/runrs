@@ -2,7 +2,7 @@ name: Checks
 
 on:
   pull_request:
-    branches: [ trunk ]
+    branches: [ "trunk" ]
 
 jobs:
   lint:
