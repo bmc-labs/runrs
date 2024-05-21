@@ -82,6 +82,11 @@
           ];
           config = {
             Cmd = [ "${runrs}/bin/runrs" ];
+            Labels = {
+              "org.opencontainers.image.source" = "https://github.com/bmc-labs/runrs";
+              "org.opencontainers.image.description" = "Manage CI runners via a REST API.";
+              "org.opencontainers.image.licenses" = "MIT";
+            };
             ExposedPorts = {
               "3000/tcp" = {};
             };
