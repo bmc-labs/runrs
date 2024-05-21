@@ -64,7 +64,7 @@
 
         runrs-clippy = craneLib.cargoClippy (commonArgs // {
           inherit cargoArtifacts;
-          cargoClippyExtraArgs = "--all-targets --no-deps -- --deny warnings -- deny clippy::all";
+          cargoClippyExtraArgs = "--all-targets --no-deps -- --deny warnings --deny clippy::all";
         });
 
         runrs-nextest = craneLib.cargoNextest (commonArgs // {
