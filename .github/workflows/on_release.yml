@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -18,4 +21,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: nix build .#runrs-docker-image
       - run: docker load < result
-      - run: docker push ghcr.io/runrs:latest
+      - run: docker push ${{ env.REGISTRY }}/bmc-labs/runrs:latest
