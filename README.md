@@ -24,7 +24,7 @@ looking up the manual steps in the GitLab docs every godforsaken time. Meanwhile
 everything else we run is Terraformed, which makes this doubl-y annoying.
 
 Thus, we wrote this simple service which provides a CRUD API for GitLab Runner configurations and
-can run in Docker, managing the Runners configuration file. We also have [a Terraform provider]()
+can run in Docker, managing the Runners configuration file. We also have [a Terraform provider](https://github.com/bmc-labs/terraform-provider-peripheral)
 you can use to _GitLab Runner Setup as Code_ your Runners.
 
 
