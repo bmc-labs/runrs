@@ -14,11 +14,11 @@ use crate::model::{GitLabRunner, GitLabRunnerConfig};
     post,
     path = "/runners",
     request_body(
-        content = Runner, description = "Runner to update", content_type = "application/json"
+        content = GitLabRunner, description = "GitLabRunner to update", content_type = "application/json"
     ),
     responses(
-        (status = StatusCode::CREATED, description = "Created new Runner", body = Runner),
-        (status = StatusCode::BAD_REQUEST, description = "Runner already exists", body = Error),
+        (status = StatusCode::CREATED, description = "Created new GitLabRunner", body = GitLabRunner),
+        (status = StatusCode::BAD_REQUEST, description = "GitLabRunner already exists", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
@@ -48,8 +48,8 @@ pub async fn create(
     get,
     path = "/runners/list",
     responses(
-        (status = StatusCode::OK, description = "Read all Runners", body = Runner),
-        (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
+        (status = StatusCode::OK, description = "Read all GitLabRunners", body = GitLabRunner),
+        (status = StatusCode::NOT_FOUND, description = "GitLabRunner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
@@ -74,11 +74,11 @@ pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Response {
     get,
     path = "/runners/{id}",
     params(
-        ("id" = String, Path, description = "Runner ID")
+        ("id" = String, Path, description = "GitLabRunner ID")
     ),
     responses(
-        (status = StatusCode::OK, description = "Read all Runners", body = Runner),
-        (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
+        (status = StatusCode::OK, description = "Read all GitLabRunners", body = GitLabRunner),
+        (status = StatusCode::NOT_FOUND, description = "GitLabRunner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
@@ -107,15 +107,15 @@ pub async fn read(
     put,
     path = "/runners/{id}",
     params(
-        ("id" = String, Path, description = "Runner ID")
+        ("id" = String, Path, description = "GitLabRunner ID")
     ),
     request_body(
-        content = Runner, description = "Runner to update", content_type = "application/json"
+        content = GitLabRunner, description = "GitLabRunner to update", content_type = "application/json"
     ),
     responses(
-        (status = StatusCode::OK, description = "Updated Runner", body = Runner),
-        (status = StatusCode::NO_CONTENT, description = "Runner already up-to-date"),
-        (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
+        (status = StatusCode::OK, description = "Updated GitLabRunner", body = GitLabRunner),
+        (status = StatusCode::NO_CONTENT, description = "GitLabRunner already up-to-date"),
+        (status = StatusCode::NOT_FOUND, description = "GitLabRunner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
@@ -160,11 +160,11 @@ pub async fn update(
     delete,
     path = "/runners/{id}",
     params(
-        ("id" = String, Path, description = "Runner ID")
+        ("id" = String, Path, description = "GitLabRunner ID")
     ),
     responses(
-        (status = StatusCode::OK, description = "Deleted Runner", body = Runner),
-        (status = StatusCode::NOT_FOUND, description = "Runner not found", body = Error),
+        (status = StatusCode::OK, description = "Deleted GitLabRunner", body = GitLabRunner),
+        (status = StatusCode::NOT_FOUND, description = "GitLabRunner not found", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
