@@ -60,8 +60,11 @@ impl GitLabRunnerConfig {
     pub async fn write(&self, path: &PathBuf) -> eyre::Result<()> {
         let config_toml = toml::to_string_pretty(self).map_err(Error::internal_error)?;
         println!("Config toml \n\n{}", config_toml);
+
+        // create directory if it doesn't exist
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).unwrap();
+        
         let mut file = File::create(path).map_err(Error::internal_error)?;
         file.write_all(config_toml.as_bytes())
             .map_err(Error::internal_error)?;
