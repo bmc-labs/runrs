@@ -12,7 +12,7 @@ use crate::model::{GitLabRunner, GitLabRunnerConfig};
 
 #[utoipa::path(
     post,
-    path = "/runners",
+    path = "/gitlab-runners",
     request_body(
         content = GitLabRunner, description = "GitLabRunner to update", content_type = "application/json"
     ),
@@ -46,7 +46,7 @@ pub async fn create(
 
 #[utoipa::path(
     get,
-    path = "/runners/list",
+    path = "/gitlab-runners/list",
     responses(
         (status = StatusCode::OK, description = "Read all GitLabRunners", body = GitLabRunner),
         (status = StatusCode::NOT_FOUND, description = "GitLabRunner not found", body = Error),
@@ -72,7 +72,7 @@ pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Response {
 
 #[utoipa::path(
     get,
-    path = "/runners/{id}",
+    path = "/gitlab-runners/{id}",
     params(
         ("id" = String, Path, description = "GitLabRunner ID")
     ),
@@ -105,7 +105,7 @@ pub async fn read(
 
 #[utoipa::path(
     put,
-    path = "/runners/{id}",
+    path = "/gitlab-runners/{id}",
     params(
         ("id" = String, Path, description = "GitLabRunner ID")
     ),
@@ -158,7 +158,7 @@ pub async fn update(
 
 #[utoipa::path(
     delete,
-    path = "/runners/{id}",
+    path = "/gitlab-runners/{id}",
     params(
         ("id" = String, Path, description = "GitLabRunner ID")
     ),
@@ -218,7 +218,7 @@ mod tests {
         let runner = GitLabRunner::for_testing();
         let request = Request::builder()
             .method(http::Method::GET)
-            .uri(&format!("/runners/{}", runner.id))
+            .uri(&format!("/gitlab-runners/{}", runner.id))
             .body(String::new())?;
 
         let response = app(app_state.clone())
@@ -232,7 +232,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
-                    .uri("/runners")
+                    .uri("/gitlab-runners")
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(serde_json::to_string(&runner)?))?,
             )
@@ -250,7 +250,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::DELETE)
-                    .uri(&format!("/runners/{}", runner.id))
+                    .uri(&format!("/gitlab-runners/{}", runner.id))
                     .body(Body::empty())?,
             )
             .await?;
@@ -278,7 +278,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::PUT)
-                    .uri(&format!("/runners/{}", runner.id))
+                    .uri(&format!("/gitlab-runners/{}", runner.id))
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(serde_json::to_string(&runner)?))?,
             )

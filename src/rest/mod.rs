@@ -34,10 +34,10 @@ pub async fn app(app_state: AppState) -> eyre::Result<Router> {
         .merge(SwaggerUi::new("/api-docs").url("/api-docs/runrs-api.json", ApiDoc::openapi()))
         .merge(
             Router::new()
-                .route("/runners", post(runners::create))
-                .route("/runners/list", get(runners::list))
+                .route("/gitlab-runners", post(runners::create))
+                .route("/gitlab-runners/list", get(runners::list))
                 .route(
-                    "/runners/:id",
+                    "/gitlab-runners/:id",
                     get(runners::read)
                         .put(runners::update)
                         .delete(runners::delete),
