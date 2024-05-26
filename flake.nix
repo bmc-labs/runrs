@@ -33,7 +33,7 @@
         # alternatively, to use a rust-toolchain.toml - which we'll want once runrs becomes stable:
         # rustToolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
 
-        craneLib = crane.lib.${system}.overrideToolchain rustToolchain;
+        craneLib = (crane.mkLib nixpkgs.legacyPackages.${system}).overrideToolchain rustToolchain;
 
         sqlFilter = path: _type: null != builtins.match "^.*/migrations/.+\.sql$" path;
         sqlOrCargo = path: type: (sqlFilter path type) || (craneLib.filterCargoSources path type);
@@ -76,15 +76,15 @@
 
         runrs-nextest = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
 
-        version = builtins.readFile (
-          pkgs.runCommand "version" { buildInputs = [ pkgs.git ]; } ''
-            echo $(git -C ${toString ./.} describe --tags --always | tr --delete 'v\n') > $out
-          ''
-        );
+        # version = builtins.readFile (
+        #   pkgs.runCommand "version" { buildInputs = [ pkgs.git ]; } ''
+        #     echo $(git -C ${toString ./.} describe --tags --always | tr --delete 'v\n') > $out
+        #   ''
+        # );
 
         runrs-docker-image = pkgs.dockerTools.buildLayeredImage {
           name = "ghcr.io/bmc-labs/runrs";
-          tag = version;
+          tag = "latest";
           contents = with pkgs.dockerTools; [
             usrBinEnv
             binSh

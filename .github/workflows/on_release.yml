@@ -21,4 +21,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: nix build .#runrs-docker-image
       - run: docker load < result
-      - run: docker push ${{ env.REGISTRY }}/bmc-labs/runrs:latest
+      - run: |
+          version=$(git describe --tags --always | tr --delete 'v\n')
+          docker push ${{ env.REGISTRY }}/bmc-labs/runrs:$version
