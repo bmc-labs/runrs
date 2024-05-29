@@ -5,6 +5,8 @@ use std::path::PathBuf;
 
 use eyre::WrapErr;
 
+use crate::config::{DEFAULT_CONFIG_PATH, DEFAULT_DATABASE_URL};
+
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub pool: atmosphere::Pool,
@@ -34,7 +36,7 @@ impl AppState {
 async fn init_database() -> eyre::Result<atmosphere::Pool> {
     let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
         tracing::warn!("DATABASE_URL not set, using in-memory database");
-        "sqlite::memory:".to_string()
+        DEFAULT_DATABASE_URL.to_string()
     });
 
     let pool = match atmosphere::Pool::connect(&database_url).await {
@@ -56,16 +58,25 @@ async fn init_database() -> eyre::Result<atmosphere::Pool> {
 fn init_config_path() -> eyre::Result<PathBuf> {
     let config_path = std::env::var("CONFIG_PATH").map_or_else(
         |_| {
-            let default_path = "/etc/gitlab-runner/config.toml";
-            tracing::warn!("CONFIG_PATH not set, using default path '{default_path}'");
-
-            PathBuf::from(default_path)
+            tracing::warn!("CONFIG_PATH not set, using default path '{DEFAULT_CONFIG_PATH}'");
+            PathBuf::from(DEFAULT_CONFIG_PATH)
         },
         PathBuf::from,
     );
 
     if !config_path.exists() {
-        tracing::warn!(?config_path, "Config file not found, creating empty file");
+        tracing::warn!(
+            ?config_path,
+            "Config file or path not found, creating it with empty file"
+        );
+
+        if let Some(base_path) = config_path.parent() {
+            if !base_path.exists() {
+                tracing::warn!(?base_path, "Config directory not found, creating it");
+                std::fs::create_dir_all(base_path).wrap_err("could not create config directory")?;
+            }
+        }
+
         File::create(&config_path).wrap_err("could not create config file")?;
     }
 

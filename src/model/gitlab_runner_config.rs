@@ -47,7 +47,6 @@ impl GitLabRunnerConfig {
             toml::to_string_pretty(&config).wrap_err("could not serialize to TOML")?;
 
         tracing::debug!(?config_toml, "writing config to disk");
-
         std::fs::write(path, config_toml).wrap_err(format!("unable to write to file at {path:?}"))
     }
 }
