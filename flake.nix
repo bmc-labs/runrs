@@ -15,7 +15,6 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       rust-overlay,
       crane,
@@ -51,20 +50,17 @@
             with pkgs;
             [ openssl ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
-          nativeBuildInputs = with pkgs; [ pkg-config ];
+          nativeBuildInputs = with pkgs; [
+            pkg-config
+            rust-bin.nightly.latest.rustfmt
+          ];
         };
 
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
         runrs = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
 
-        runrs-fmt = craneLib.cargoFmt (
-          commonArgs
-          // {
-            inherit cargoArtifacts;
-            rustFmtExtraArgs = "--check --all";
-          }
-        );
+        runrs-fmt = craneLib.cargoFmt (commonArgs // { inherit cargoArtifacts; });
 
         runrs-clippy = craneLib.cargoClippy (
           commonArgs
