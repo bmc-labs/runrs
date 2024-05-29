@@ -1,7 +1,19 @@
 [package]
 name = "runrs"
+description = "A microservice to manage GitLab Runners in Docker via REST"
+
 version = "0.1.0"
 edition = "2021"
+
+license = "Apache-2.0"
+repository = "https://github.com/bmc-labs/runrs"
+keywords = ["gitlab", "runners", "ci/cd", "infra", "peripheral"]
+exclude = [".github", "assets"]
+
+authors = [
+    "Fabio Meier <fabio.meier@bmc-labs.com>",
+    "Florian Eich <florian.eich@bmc-labs.com>",
+]
 
 [dependencies]
 atmosphere = { version = "0.2.0", features = ["sqlite"] }
@@ -17,7 +29,12 @@ thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["full"] }
 toml = "0.8.12"
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json", "time", "chrono"] }
+tracing-subscriber = { version = "0.3.18", features = [
+    "env-filter",
+    "json",
+    "time",
+    "chrono",
+] }
 tracing-test = "0.2.4"
 utoipa = { version = "4.2.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
