@@ -24,8 +24,9 @@ looking up the manual steps in the GitLab docs every godforsaken time. Meanwhile
 everything else we run is Terraformed, which makes this doubl-y annoying.
 
 Thus, we wrote this simple service which provides a CRUD API for GitLab Runner configurations and
-can run in Docker, managing the Runners configuration file. We also have [a Terraform provider](https://github.com/bmc-labs/terraform-provider-peripheral)
-you can use to _GitLab Runner Setup as Code_ your Runners.
+can run in Docker, managing the Runners configuration file. We also have [a Terraform
+provider](https://github.com/bmc-labs/terraform-provider-peripheral) you can use to _GitLab Runner
+Setup as Code_ your Runners.
 
 
 ## Using runrs in prod
@@ -42,8 +43,10 @@ you should be good. For testing end to end, you'll need:
 - `gitlab-runner`, either installed and running locally or running in Docker. The docs for
   installing it are [here](https://docs.gitlab.com/runner/install/osx.html).
 
-Configuration is done via the `.env` file in the repo. We know that that's bad, and we intend to fix
-that, but remember we also told you we don't recommend running this in prod yet, so yeah.
+It's _also_ a nixified project using a flake, so if you prefer to use that to build it, you can.
+Look at the `flake.nix` for current package targets. In that vein: there is also a
+[`direnv`](https://direnv.net/) setup in the project, so if you have that installed, you can just
+`direnv allow` in the project root and you'll have the setup done.
 
 ### Setup
 
@@ -58,6 +61,16 @@ that, but remember we also told you we don't recommend running this in prod yet,
    ```
 
 Similarly, testing is via `cargo test`, as you might have expected.
+
+If you are building with nix, you can use the `nix` command to build the project:
+
+```bash
+# to build the default target, which is the "runrs" binary:
+nix build
+
+# to build the Docker image:
+nix build .#runrs-docker-image
+```
 
 That's it. Make a PR with your changes and we'll talk about them.
 
