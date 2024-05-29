@@ -19,8 +19,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo $(git describe --tags --always | tr --delete 'v' > version) && git add version
       - run: nix build .#runrs-docker-image
       - run: docker load < result
-      - run: |
-          version=$(git describe --tags --always | tr --delete 'v\n')
-          docker push ${{ env.REGISTRY }}/bmc-labs/runrs:$version
+      - run: docker push ${{ env.REGISTRY }}/bmc-labs/runrs:$(cat version)

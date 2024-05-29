@@ -76,15 +76,13 @@
 
         runrs-nextest = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
 
-        # version = builtins.readFile (
-        #   pkgs.runCommand "version" { buildInputs = [ pkgs.git ]; } ''
-        #     echo $(git -C ${toString ./.} describe --tags --always | tr --delete 'v\n') > $out
-        #   ''
-        # );
-
         runrs-docker-image = pkgs.dockerTools.buildLayeredImage {
           name = "ghcr.io/bmc-labs/runrs";
-          tag = "latest";
+          tag =
+            if (builtins.pathExists ./version) then
+              lib.removeSuffix "\n" (builtins.readFile ./version)
+            else
+              "latest";
           contents = with pkgs.dockerTools; [
             usrBinEnv
             binSh
