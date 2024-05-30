@@ -1,9 +1,10 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
+mod auth;
 mod runners;
 
 use axum::routing::{get, post};
-use axum::Router;
+use axum::{middleware, Router};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -41,7 +42,8 @@ pub async fn app(app_state: AppState) -> eyre::Result<Router> {
                     get(runners::read)
                         .put(runners::update)
                         .delete(runners::delete),
-                ),
+                )
+                .layer(middleware::from_fn(auth::authenticate)),
         )
         .with_state(app_state))
 }
