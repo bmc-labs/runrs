@@ -2,9 +2,11 @@
 
 use std::fmt::Display;
 
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use utoipa::{ToResponse, ToSchema};

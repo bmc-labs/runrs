@@ -39,9 +39,7 @@ mod monitoring {
     use std::str::FromStr;
 
     use tracing::Level;
-    use tracing_subscriber::filter::Targets;
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::util::SubscriberInitExt;
+    use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
 
     /// Initializes backtracing and error handling capabilities.
     pub fn init() -> eyre::Result<()> {
