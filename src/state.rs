@@ -25,11 +25,12 @@ impl AppState {
 #[cfg(test)]
 impl AppState {
     pub fn for_testing(pool: atmosphere::Pool) -> Self {
-        let config_path_str = format!("/tmp/gitlab-runner-config-{}.toml", uuid::Uuid::new_v4());
-        Self {
-            pool,
-            config_path: PathBuf::from(config_path_str),
-        }
+        let config_path = PathBuf::from(format!(
+            "/tmp/gitlab-runner-config-{}.toml",
+            uuid::Uuid::new_v4()
+        ));
+
+        Self { pool, config_path }
     }
 }
 

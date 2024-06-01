@@ -6,9 +6,9 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 
-use crate::app_state::AppState;
 use crate::error::Error;
 use crate::model::{GitLabRunner, GitLabRunnerConfig};
+use crate::state::AppState;
 
 #[utoipa::path(
     post,
@@ -24,7 +24,9 @@ use crate::model::{GitLabRunner, GitLabRunnerConfig};
 )]
 #[tracing::instrument(skip(pool))]
 pub async fn create(
-    State(AppState { pool, config_path }): State<AppState>,
+    State(AppState {
+        pool, config_path, ..
+    }): State<AppState>,
     Json(mut runner): Json<GitLabRunner>,
 ) -> Response {
     tracing::debug!(?runner, "creating runner in database");
@@ -121,7 +123,9 @@ pub async fn read(
 )]
 #[tracing::instrument(skip(pool))]
 pub async fn update(
-    State(AppState { pool, config_path }): State<AppState>,
+    State(AppState {
+        pool, config_path, ..
+    }): State<AppState>,
     Path(id): Path<String>,
     Json(updated_runner): Json<GitLabRunner>,
 ) -> Response {
@@ -170,7 +174,9 @@ pub async fn update(
 )]
 #[tracing::instrument(skip(pool))]
 pub async fn delete(
-    State(AppState { pool, config_path }): State<AppState>,
+    State(AppState {
+        pool, config_path, ..
+    }): State<AppState>,
     Path(id): Path<String>,
 ) -> Response {
     tracing::debug!(?id, "deleting runner with id");
@@ -206,13 +212,14 @@ mod tests {
     use pretty_assertions::assert_eq;
     use tower::ServiceExt;
 
-    use crate::app_state::AppState;
     use crate::model::GitLabRunner;
-    use crate::rest::app; // for `call`, `oneshot`, and `ready`
+    use crate::rest::app;
+    use crate::state::AppState; // for `call`, `oneshot`, and `ready`
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
     async fn create_delete(pool: atmosphere::Pool) -> eyre::Result<()> {
+        let secret = "test-secret".to_string();
         let app_state = AppState::for_testing(pool);
 
         let runner = GitLabRunner::for_testing();
@@ -221,14 +228,14 @@ mod tests {
             .uri(&format!("/gitlab-runners/{}", runner.id))
             .body(String::new())?;
 
-        let response = app(app_state.clone())
-            .await?
+        let response = app(secret.clone(), app_state.clone())
+            .await
             .oneshot(request.clone())
             .await?;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
-        let response = app(app_state.clone())
-            .await?
+        let response = app(secret.clone(), app_state.clone())
+            .await
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
@@ -239,14 +246,14 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::CREATED);
 
-        let response = app(app_state.clone())
-            .await?
+        let response = app(secret.clone(), app_state.clone())
+            .await
             .oneshot(request.clone())
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let response = app(app_state.clone())
-            .await?
+        let response = app(secret.clone(), app_state.clone())
+            .await
             .oneshot(
                 Request::builder()
                     .method(http::Method::DELETE)
@@ -256,7 +263,10 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let response = app(app_state.clone()).await?.oneshot(request).await?;
+        let response = app(secret.clone(), app_state.clone())
+            .await
+            .oneshot(request)
+            .await?;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
         std::fs::remove_file(&app_state.config_path)?;
@@ -267,14 +277,15 @@ mod tests {
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
     async fn update(pool: atmosphere::Pool) -> eyre::Result<()> {
+        let secret = "test-secret".to_string();
         let app_state = AppState::for_testing(pool);
 
         let mut runner = GitLabRunner::for_testing();
         runner.save(&app_state.pool).await?;
 
         runner.url = "https://gitlab.bmc-labs.com".to_string();
-        let response = app(app_state.clone())
-            .await?
+        let response = app(secret.clone(), app_state.clone())
+            .await
             .oneshot(
                 Request::builder()
                     .method(http::Method::PUT)
