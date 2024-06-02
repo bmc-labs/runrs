@@ -7,9 +7,9 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use utoipa::ToSchema;
+use utoipa::{ToResponse, ToSchema};
 
-#[derive(Debug, Error, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Error, PartialEq, Eq, Serialize, Deserialize, ToResponse, ToSchema)]
 #[non_exhaustive]
 pub enum ErrorType {
     #[error("connection failed")]

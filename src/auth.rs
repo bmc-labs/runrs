@@ -1,7 +1,7 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use chrono::{TimeDelta, Utc};
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 
 const DEFAULT_VALIDITY_PERIOD_DAYS: i64 = 90;
@@ -41,7 +41,7 @@ pub fn init_secret() -> eyre::Result<String> {
     };
 
     let token = encode(
-        &Header::new(Algorithm::HS512),
+        &Header::default(),
         &Claims::new(None)?,
         &EncodingKey::from_secret(secret.as_ref()),
     )?;
