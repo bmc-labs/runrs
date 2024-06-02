@@ -1,36 +1,28 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use chrono::{TimeDelta, Utc};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
 const DEFAULT_VALIDITY_PERIOD_DAYS: i64 = 90;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    // default fields
-    iat: usize,  // issued at - UTC timestamp in seconds
-    exp: usize,  // expiration time - UTC timestamp in seconds
     iss: String, // issuer
-    // custom fields
-    org: String, // organization
+    exp: usize,  // expiration time - UTC timestamp in seconds
 }
 
 impl Claims {
     pub fn new(validity_period_days: Option<i64>) -> eyre::Result<Self> {
-        let now = Utc::now();
-        let exp = now
+        let iss = "peripheral".to_string();
+        let exp = Utc::now()
             .checked_add_signed(TimeDelta::days(
                 validity_period_days.unwrap_or(DEFAULT_VALIDITY_PERIOD_DAYS),
             ))
-            .ok_or(eyre::eyre!("could not calculate expiration time"))?;
+            .ok_or(eyre::eyre!("could not calculate expiration time"))?
+            .timestamp() as usize;
 
-        Ok(Self {
-            iat: now.timestamp() as usize,
-            exp: exp.timestamp() as usize,
-            iss: "peripheral".to_string(),
-            org: "bmc::labs".to_string(),
-        })
+        Ok(Self { iss, exp })
     }
 }
 
@@ -40,12 +32,27 @@ pub fn init_secret() -> eyre::Result<String> {
         eyre::bail!("SECRET not set");
     };
 
+    Ok(secret)
+}
+
+pub fn encode_token(secret: &str) -> eyre::Result<String> {
     let token = encode(
         &Header::default(),
         &Claims::new(None)?,
         &EncodingKey::from_secret(secret.as_ref()),
     )?;
-    tracing::info!(?token, "Generated token");
+    tracing::info!(?token, "generated token");
 
-    Ok(secret)
+    Ok(token)
+}
+
+pub fn validate_token(secret: &str, token: &str) -> eyre::Result<Claims> {
+    let token_data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(secret.as_ref()),
+        &Validation::default(),
+    )?;
+    tracing::info!("token is valid");
+
+    Ok(token_data.claims)
 }

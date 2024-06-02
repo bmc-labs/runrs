@@ -57,12 +57,11 @@ mod auth {
     use axum::http::{header, HeaderMap};
     use axum::middleware::Next;
     use axum::response::Response;
-    use jsonwebtoken::{decode, DecodingKey, Validation};
     use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
     use utoipa::openapi::OpenApi;
     use utoipa::Modify;
 
-    use crate::auth::Claims;
+    use crate::auth::validate_token;
     use crate::error::Error;
 
     /// Authenticate middleware checks the request headers for a valid JWT token.
@@ -85,11 +84,7 @@ mod auth {
             return err.into();
         };
 
-        let Ok(_) = decode::<Claims>(
-            token,
-            &DecodingKey::from_secret(secret.as_ref()),
-            &Validation::default(),
-        ) else {
+        let Ok(_) = validate_token(&secret, token) else {
             tracing::warn!(?token, "unable to decode token");
             return err.into();
         };
