@@ -1,10 +1,11 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-mod app_state;
+mod auth;
 mod config;
 mod error;
 mod model;
 mod rest;
+mod state;
 
 // Embed database migrations in the binary
 pub(crate) static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
@@ -18,10 +19,13 @@ async fn main() -> eyre::Result<()> {
     tracing::info!("REST API on http://{}", listener.local_addr()?);
     tracing::info!("API docs on http://{}/api-docs", listener.local_addr()?);
 
-    let app_state = app_state::AppState::init().await?;
+    let secret = auth::init_secret()?;
+    let _ = auth::encode_token(&secret)?;
+
+    let app_state = state::AppState::init().await?;
 
     // initialize router and run app
-    let app = rest::app(app_state).await?;
+    let app = rest::app(secret, app_state).await;
 
     if let Err(err) = axum::serve(listener, app).await {
         tracing::error!(%err, "Server stopped");
