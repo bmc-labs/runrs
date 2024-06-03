@@ -3,13 +3,15 @@
 mod runners;
 
 use auth::SecurityAddon;
-use axum::routing::{get, post};
-use axum::{middleware, Router};
+use axum::{
+    middleware,
+    routing::{get, post},
+    Router,
+};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::state::AppState;
-use crate::{error, model};
+use crate::{error, model, state::AppState};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -53,16 +55,21 @@ pub async fn app(secret: String, app_state: AppState) -> Router {
 }
 
 mod auth {
-    use axum::extract::{Request, State};
-    use axum::http::{header, HeaderMap};
-    use axum::middleware::Next;
-    use axum::response::Response;
-    use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
-    use utoipa::openapi::OpenApi;
-    use utoipa::Modify;
+    use axum::{
+        extract::{Request, State},
+        http::{header, HeaderMap},
+        middleware::Next,
+        response::Response,
+    };
+    use utoipa::{
+        openapi::{
+            security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+            OpenApi,
+        },
+        Modify,
+    };
 
-    use crate::auth::validate_token;
-    use crate::error::Error;
+    use crate::{auth::validate_token, error::Error};
 
     /// Authenticate middleware checks the request headers for a valid JWT token.
     pub async fn authenticate(
