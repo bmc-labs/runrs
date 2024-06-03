@@ -28,8 +28,10 @@ impl Claims {
 
 pub fn init_secret() -> eyre::Result<String> {
     let Ok(secret) = std::env::var("SECRET") else {
-        tracing::error!("SECRET not set - aborting");
-        eyre::bail!("SECRET not set");
+        let err_msg = "SECRET not set in environment";
+
+        tracing::error!(err_msg);
+        eyre::bail!(err_msg);
     };
 
     Ok(secret)

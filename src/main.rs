@@ -20,9 +20,9 @@ async fn main() -> eyre::Result<()> {
     tracing::info!("API docs on http://{}/api-docs", listener.local_addr()?);
 
     let secret = auth::init_secret()?;
-    let app_state = state::AppState::init().await?;
-
     let _ = auth::encode_token(&secret)?;
+
+    let app_state = state::AppState::init().await?;
 
     // initialize router and run app
     let app = rest::app(secret, app_state).await;
