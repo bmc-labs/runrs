@@ -1,7 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use std::fs::File;
-use std::path::PathBuf;
+use std::{fs::File, path::PathBuf};
 
 use eyre::WrapErr;
 

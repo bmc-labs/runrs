@@ -1,14 +1,18 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use atmosphere::{Create as _, Delete as _, Read as _, Update as _};
-use axum::extract::{Path, State};
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
 
-use crate::error::Error;
-use crate::model::{GitLabRunner, GitLabRunnerConfig};
-use crate::state::AppState;
+use crate::{
+    error::Error,
+    model::{GitLabRunner, GitLabRunnerConfig},
+    state::AppState,
+};
 
 #[utoipa::path(
     post,
@@ -207,15 +211,14 @@ pub async fn delete(
 #[cfg(test)]
 mod tests {
     use atmosphere::{Read as _, Update as _};
-    use axum::body::Body;
-    use axum::http::{self, Request, StatusCode};
+    use axum::{
+        body::Body,
+        http::{self, Request, StatusCode},
+    };
     use pretty_assertions::assert_eq;
     use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
 
-    use crate::auth;
-    use crate::model::GitLabRunner;
-    use crate::rest::app;
-    use crate::state::AppState;
+    use crate::{auth, model::GitLabRunner, rest::app, state::AppState};
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
