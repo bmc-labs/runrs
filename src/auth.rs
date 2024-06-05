@@ -4,7 +4,7 @@ use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_VALIDITY_PERIOD_DAYS: i64 = 90;
+const DEFAULT_VALIDITY_PERIOD_HOURS: i64 = 12;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -16,8 +16,8 @@ impl Claims {
     pub fn new(validity_period_days: Option<i64>) -> eyre::Result<Self> {
         let iss = "peripheral".to_string();
         let exp = Utc::now()
-            .checked_add_signed(TimeDelta::days(
-                validity_period_days.unwrap_or(DEFAULT_VALIDITY_PERIOD_DAYS),
+            .checked_add_signed(TimeDelta::hours(
+                validity_period_days.unwrap_or(DEFAULT_VALIDITY_PERIOD_HOURS),
             ))
             .ok_or(eyre::eyre!("could not calculate expiration time"))?
             .timestamp() as usize;

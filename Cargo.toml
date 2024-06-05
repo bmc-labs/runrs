@@ -11,6 +11,7 @@ keywords = ["gitlab", "runners", "ci/cd", "infra", "peripheral"]
 exclude = [".github", "assets"]
 
 authors = [
+    "bmc::labs GmbH <runrs@bmc-labs.com>",
     "Fabio Meier <fabio.meier@bmc-labs.com>",
     "Florian Eich <florian.eich@bmc-labs.com>",
 ]
