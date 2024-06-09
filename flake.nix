@@ -15,6 +15,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       rust-overlay,
       crane,
@@ -34,6 +35,9 @@
 
         craneLib = (crane.mkLib nixpkgs.legacyPackages.${system}).overrideToolchain rustToolchain;
 
+        # Required to NOT filter out SQL files from the source tree. We need them for the build
+        # process because we compile them into the binary, allowing us to run migrations from just
+        # the binary without additional tooling.
         sqlFilter = path: _type: null != builtins.match "^.*/migrations/.+\.sql$" path;
         sqlOrCargo = path: type: (sqlFilter path type) || (craneLib.filterCargoSources path type);
 
@@ -52,6 +56,7 @@
 
           nativeBuildInputs = with pkgs; [
             pkg-config
+            # This switches rustfmt to the nightly channel.
             rust-bin.nightly.latest.rustfmt
           ];
         };
@@ -79,6 +84,13 @@
               lib.removeSuffix "\n" (builtins.readFile ./version)
             else
               "latest";
+          #
+          # "created" option takes an ISO timestamp or "now"; defaults to UNIX epoch.
+          #
+          # Using the default or a fixed timestamp (i.e., the time the git tag was created for a
+          # release) makes the Docker image bit-level reproducible. Using "now" breaks this.
+          #
+          # created = "now";
           contents = with pkgs.dockerTools; [
             usrBinEnv
             binSh
@@ -87,11 +99,14 @@
           ];
           config = {
             Cmd = [ "${runrs}/bin/runrs" ];
+            # These labels are required for GitHub to correctly associate the image with, and thus
+            # inherit visibility from, the repository.
             Labels = {
               "org.opencontainers.image.source" = "https://github.com/bmc-labs/runrs";
               "org.opencontainers.image.description" = "Manage CI runners via a REST API.";
               "org.opencontainers.image.licenses" = "Apache-2.0";
             };
+            # Not technically required to specify here, but a hint for runtime environments.
             ExposedPorts = {
               "3000/tcp" = { };
             };
@@ -113,7 +128,10 @@
             ;
         };
 
-        devShells.default = pkgs.mkShell { inputsFrom = [ runrs ]; };
+        devShells.default = craneLib.devShell {
+          inputsFrom = [ runrs ];
+          checks = self.checks.${system};
+        };
       }
     );
 }
