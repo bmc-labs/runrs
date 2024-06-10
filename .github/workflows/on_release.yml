@@ -19,14 +19,13 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker image with "latest" tag
-        run: |
-          nix build .#runrs-docker-image
-          docker load < result
-          docker push ${{ env.REGISTRY }}/bmc-labs/runrs:latest
-      - name: Build and push Docker image with version tag
-        run: |
-          echo $(git describe --tags --always | tr --delete 'v' > version) && git add version
-          nix build .#runrs-docker-image
-          docker load < result
-          docker push ${{ env.REGISTRY }}/bmc-labs/runrs:$(cat version)
+      - name: Build and load Docker image with "latest" tag
+        run: nix build .#runrs-docker-image && docker load < result
+      - name: Push Docker image with "latest" tag to ghcr.io
+        run: docker push ${{ env.REGISTRY }}/bmc-labs/runrs:latest
+      - name: Retrieve version tag and add to git
+        run: echo $(git describe --tags --always | tr --delete 'v' > version) && git add version
+      - name: Build and load Docker image with version tag
+        run: nix build .#runrs-docker-image && docker load < result
+      - name: Push Docker image with release tag to ghcr.io
+        run: docker push ${{ env.REGISTRY }}/bmc-labs/runrs:$(cat version)
