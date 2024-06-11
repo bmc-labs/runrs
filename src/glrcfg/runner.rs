@@ -20,9 +20,7 @@ impl Default for Runner {
             url: "https://gitlab.com/".to_string(),
             token: "".to_string(),
             executor: "docker".to_string(),
-            docker: Docker {
-                image: "alpine:latest".to_string(),
-            },
+            docker: Default::default(),
         }
     }
 }
@@ -34,4 +32,12 @@ impl Default for Runner {
 #[derive(Debug, Serialize)]
 pub struct Docker {
     pub image: String,
+}
+
+impl Default for Docker {
+    fn default() -> Self {
+        Self {
+            image: "alpine:latest".to_string(),
+        }
+    }
 }
