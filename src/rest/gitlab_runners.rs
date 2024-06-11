@@ -1,4 +1,4 @@
-// Copyright 2024 bmc::labs GmbH. All rights reserved.
+// Append or overwrite environment variables. Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use atmosphere::{Create as _, Delete as _, Read as _, Update as _};
 use axum::{
@@ -21,8 +21,8 @@ use crate::{
         content = GitLabRunner, description = "GitLabRunner to update", content_type = "application/json"
     ),
     responses(
-        (status = StatusCode::CREATED, description = "Created new GitLabRunner", body = GitLabRunner),
-        (status = StatusCode::BAD_REQUEST, description = "GitLabRunner already exists", body = Error),
+        (status = StatusCode::CREATED, description = "Created new GitLab Runner", body = GitLabRunner),
+        (status = StatusCode::BAD_REQUEST, description = "GitLab Runner already exists", body = Error),
         (status = StatusCode::INTERNAL_SERVER_ERROR, description = "Internal server error", body = Error)
     )
 )]
@@ -231,7 +231,7 @@ mod tests {
         let runner = GitLabRunner::for_testing();
         let request = Request::builder()
             .method(http::Method::GET)
-            .uri(&format!("/gitlab-runners/{}", runner.id))
+            .uri(&format!("/gitlab-runners/{}", runner.id()))
             .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
             .body(String::new())?;
 
@@ -265,7 +265,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::DELETE)
-                    .uri(&format!("/gitlab-runners/{}", runner.id))
+                    .uri(&format!("/gitlab-runners/{}", runner.id()))
                     .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
                     .body(Body::empty())?,
             )
@@ -294,13 +294,13 @@ mod tests {
         let mut runner = GitLabRunner::for_testing();
         runner.save(&app_state.pool).await?;
 
-        runner.url = "https://gitlab.bmc-labs.com".to_string();
+        runner.set_url("https://gitlab.bmc-labs.com");
         let response = app(secret.clone(), app_state.clone())
             .await
             .oneshot(
                 Request::builder()
                     .method(http::Method::PUT)
-                    .uri(&format!("/gitlab-runners/{}", runner.id))
+                    .uri(&format!("/gitlab-runners/{}", runner.id()))
                     .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(serde_json::to_string(&runner)?))?,
@@ -308,7 +308,7 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let runner_from_db = GitLabRunner::find(&runner.id, &app_state.pool).await?;
+        let runner_from_db = GitLabRunner::find(runner.id(), &app_state.pool).await?;
         assert_eq!(runner_from_db, runner);
 
         std::fs::remove_file(&app_state.config_path)?;

@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use super::GitLabRunner;
 
+// https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section
 #[derive(Debug, Serialize)]
 pub struct GlobalSection {
     pub concurrent: u32,
@@ -23,6 +24,7 @@ impl Default for GlobalSection {
     }
 }
 
+// https://docs.gitlab.com/runner/configuration/advanced-configuration.html
 #[derive(Debug, Serialize)]
 pub struct GitLabRunnerConfig {
     #[serde(flatten)]

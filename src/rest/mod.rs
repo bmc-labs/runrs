@@ -1,6 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-mod runners;
+mod gitlab_runners;
 
 use auth::SecurityAddon;
 use axum::{
@@ -15,7 +15,13 @@ use crate::{error, model, state::AppState};
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(runners::create, runners::list, runners::read, runners::update, runners::delete,),
+    paths(
+        gitlab_runners::create,
+        gitlab_runners::list,
+        gitlab_runners::read,
+        gitlab_runners::update,
+        gitlab_runners::delete,
+    ),
     components(
         schemas(
             error::Error,
@@ -41,13 +47,13 @@ pub async fn app(secret: String, app_state: AppState) -> Router {
         .merge(SwaggerUi::new("/api-docs").url("/api-docs/runrs-api.json", ApiDoc::openapi()))
         .merge(
             Router::new()
-                .route("/gitlab-runners", post(runners::create))
-                .route("/gitlab-runners/list", get(runners::list))
+                .route("/gitlab-runners", post(gitlab_runners::create))
+                .route("/gitlab-runners/list", get(gitlab_runners::list))
                 .route(
                     "/gitlab-runners/:id",
-                    get(runners::read)
-                        .put(runners::update)
-                        .delete(runners::delete),
+                    get(gitlab_runners::read)
+                        .put(gitlab_runners::update)
+                        .delete(gitlab_runners::delete),
                 )
                 .layer(middleware::from_fn_with_state(secret, auth::authenticate)),
         )
