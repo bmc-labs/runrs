@@ -4,10 +4,21 @@ use atmosphere::{table, Schema, Table as _};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
-// https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runners-section
+/// Public API for configuring a single CI/CD job executor, not the GitLab Runner service.
+///
+/// GitLab publish a service binary they refer to as "GitLab Runner". You can install it locally or
+/// on you server [as per its documentation](https://docs.gitlab.com/runner/install/). This binary
+/// is, however, *not* the CI/CD job executor; rather, it _manages_ the executors. As such, when you
+/// "register a runner" (as per [their documentation](https://docs.gitlab.com/runner/register/)),
+/// you use the `gitlab-runner` binary to do so.
+///
+/// The `GitLabRunner` struct replicates the API of the `gitlab-runner` binary, albeit exposing a
+/// smaller configuration surface. In other words: if you run `gitlab-runner register --help`, you
+/// get a list of options. We support a subset of those options, and those which are supported are
+/// named the same here as they are in `gitlab-runner`, except in `snake_case` instead of
+/// `kebab-case`. For example, `--docker-image` becomes `docker_image`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Schema, ToSchema, IntoParams)]
 #[table(schema = "public", name = "gitlab_runners")]
-#[serde(rename_all = "kebab-case")]
 pub struct GitLabRunner {
     /// Unique ID of the runner within the GitLab instance
     #[sql(pk)]

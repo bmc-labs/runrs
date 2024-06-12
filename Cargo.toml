@@ -2,7 +2,7 @@
 name = "runrs"
 description = "A microservice to manage GitLab Runners in Docker via REST"
 
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 license = "Apache-2.0"
