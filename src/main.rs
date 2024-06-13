@@ -3,6 +3,7 @@
 mod auth;
 mod config;
 mod error;
+mod logging;
 mod model;
 mod rest;
 mod state;
@@ -13,7 +14,7 @@ pub(crate) static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migratio
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     // set envvar defaults and init tracing
-    monitoring::init()?;
+    logging::init()?;
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::info!("REST API on http://{}", listener.local_addr()?);
@@ -33,41 +34,4 @@ async fn main() -> eyre::Result<()> {
     }
 
     Ok(())
-}
-
-mod monitoring {
-    use std::str::FromStr;
-
-    use tracing::Level;
-    use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
-
-    /// Initializes backtracing and error handling capabilities.
-    pub fn init() -> eyre::Result<()> {
-        const BT_ENVVAR: &str = "RUST_LIB_BACKTRACE";
-        if std::env::var(BT_ENVVAR).is_err() {
-            std::env::set_var(BT_ENVVAR, "1")
-        }
-
-        // set up format layer with filtering for tracing
-        const LG_ENVVAR: &str = "RUST_LOG";
-        if std::env::var(LG_ENVVAR).is_err() {
-            std::env::set_var(LG_ENVVAR, "error,runrs=debug")
-        }
-
-        let filter = Targets::from_str(
-            std::env::var("RUST_LOG")
-                .as_deref()
-                .unwrap_or("error,runrs=debug"),
-        )?;
-
-        tracing_subscriber::fmt()
-            .with_max_level(Level::TRACE)
-            // TODO(flrn): turn on JSON once we start logging to a service
-            // .json()
-            .finish()
-            .with(filter)
-            .init();
-
-        Ok(())
-    }
 }
