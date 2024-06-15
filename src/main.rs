@@ -3,9 +3,9 @@
 mod auth;
 mod config;
 mod error;
+mod handlers;
 mod logging;
 mod model;
-mod rest;
 mod state;
 
 // Embed database migrations in the binary
@@ -26,7 +26,7 @@ async fn main() -> eyre::Result<()> {
     let app_state = state::AppState::init().await?;
 
     // initialize router and run app
-    let app = rest::app(secret, app_state).await;
+    let app = handlers::app(secret, app_state).await;
 
     if let Err(err) = axum::serve(listener, app).await {
         tracing::error!(%err, "Server stopped");

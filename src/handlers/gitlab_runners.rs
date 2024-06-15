@@ -218,7 +218,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
 
-    use crate::{auth, model::GitLabRunner, rest::app, state::AppState};
+    use crate::{auth, model::GitLabRunner, handlers::app, state::AppState};
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
