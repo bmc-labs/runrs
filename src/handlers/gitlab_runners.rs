@@ -10,7 +10,7 @@ use axum::{
 
 use crate::{
     error::Error,
-    model::{GitLabRunner, GitLabRunnerConfig},
+    models::{GitLabRunner, GitLabRunnerConfig},
     state::AppState,
 };
 
@@ -218,7 +218,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
 
-    use crate::{auth, model::GitLabRunner, handlers::app, state::AppState};
+    use crate::{auth, handlers::app, models::GitLabRunner, state::AppState};
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]

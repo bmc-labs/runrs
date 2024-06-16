@@ -11,12 +11,12 @@ pub fn init() -> eyre::Result<()> {
     let filter =
         EnvFilter::try_from_default_env().unwrap_or(EnvFilter::try_new("error,runrs=warn")?);
 
-    tracing_subscriber::fmt()
-        .with_env_filter(filter)
-        // TODO(flrn): turn on JSON once we start logging to a service
-        // .json()
-        .finish()
-        .init();
+    let subscriber = tracing_subscriber::fmt().with_env_filter(filter);
+
+    match std::env::var("LOG_FMT") {
+        Ok(fmt) if fmt == "json" => subscriber.json().finish().init(),
+        _ => subscriber.finish().init(),
+    }
 
     Ok(())
 }

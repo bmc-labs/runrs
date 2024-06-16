@@ -5,7 +5,7 @@ mod config;
 mod error;
 mod handlers;
 mod logging;
-mod model;
+mod models;
 mod state;
 
 // Embed database migrations in the binary

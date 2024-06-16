@@ -11,7 +11,7 @@ use axum::{
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::{error, model, state::AppState};
+use crate::{error, models, state::AppState};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -26,7 +26,7 @@ use crate::{error, model, state::AppState};
         schemas(
             error::Error,
             error::ErrorType,
-            model::GitLabRunner,
+            models::GitLabRunner,
         )
     ),
     tags(
