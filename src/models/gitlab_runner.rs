@@ -4,6 +4,8 @@ use atmosphere::{table, Schema, Table as _};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
+use crate::glrcfg::{Docker, Runner};
+
 /// Public API for configuring a single CI/CD job executor, not the GitLab Runner service.
 ///
 /// GitLab publish a service binary they refer to as "GitLab Runner". You can install it locally or
@@ -32,10 +34,6 @@ pub struct GitLabRunner {
     token: String,
     /// Docker image to be used
     docker_image: String,
-    /// Tag list (comma-separated list of tags the runner should run for)
-    tag_list: String,
-    /// Register to run untagged builds; defaults to 'true' when 'tag_list' is empty
-    run_untagged: bool,
 }
 
 impl GitLabRunner {
@@ -48,15 +46,22 @@ impl GitLabRunner {
         self.url = other.url;
         self.token = other.token;
         self.docker_image = other.docker_image;
-        self.tag_list = other.tag_list;
-        self.run_untagged = other.run_untagged;
-
-        eyre::ensure!(
-            !self.tag_list.is_empty() || self.run_untagged,
-            "Either 'tag_list' or 'run_untagged' must be set"
-        );
 
         Ok(())
+    }
+}
+
+impl From<GitLabRunner> for Runner {
+    fn from(runner: GitLabRunner) -> Self {
+        Runner {
+            name: runner.name,
+            url: runner.url,
+            token: runner.token,
+            docker: Docker {
+                image: runner.docker_image,
+            },
+            ..Default::default()
+        }
     }
 }
 
@@ -69,8 +74,6 @@ impl GitLabRunner {
             url: "https://gitlab.your-company.com".to_string(),
             token: "gltok-warblgarbl".to_string(),
             docker_image: "alpine:latest".to_string(),
-            tag_list: "tag1,tag2".to_string(),
-            run_untagged: false,
         }
     }
 

@@ -13,11 +13,13 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
     auth::{authenticate, SecurityAddon},
-    config::{DEFAULT_CONFIG_PATH, DEFAULT_DATABASE_URL},
     error,
     handlers::gitlab_runners,
     models,
 };
+
+pub const DEFAULT_DATABASE_URL: &str = "sqlite::memory:";
+pub const DEFAULT_CONFIG_PATH: &str = "/tmp/gitlab-runner/config.toml";
 
 #[derive(OpenApi)]
 #[openapi(
