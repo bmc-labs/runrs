@@ -128,10 +128,12 @@
             ;
         };
 
-        devShells.default = craneLib.devShell {
-          inputsFrom = [ runrs ];
-          checks = self.checks.${system};
-        };
+        devShells.default = pkgs.mkShell { inputsFrom = [ runrs ]; };
+
+        # devShells.default = craneLib.devShell {
+        #   inputsFrom = [ runrs ];
+        #   checks = self.checks.${system};
+        # };
       }
     );
 }

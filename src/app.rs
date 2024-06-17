@@ -2,10 +2,72 @@
 
 use std::{fs::File, path::PathBuf};
 
+use axum::{
+    middleware,
+    routing::{get, post},
+    Router,
+};
 use eyre::WrapErr;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
-use crate::config::{DEFAULT_CONFIG_PATH, DEFAULT_DATABASE_URL};
+use crate::{
+    auth::{authenticate, SecurityAddon},
+    config::{DEFAULT_CONFIG_PATH, DEFAULT_DATABASE_URL},
+    error,
+    handlers::gitlab_runners,
+    models,
+};
 
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        gitlab_runners::create,
+        gitlab_runners::list,
+        gitlab_runners::read,
+        gitlab_runners::update,
+        gitlab_runners::delete,
+    ),
+    components(
+        schemas(
+            error::Error,
+            error::ErrorType,
+            models::GitLabRunner,
+        )
+    ),
+    tags(
+        (name = "runrs", description = "GitLab Runners Docker API")
+    ),
+    servers(
+        (url = "http://0.0.0.0:3000/", description = "Local development server")
+    ),
+    security(
+        ("api_token" = [])
+    ),
+    modifiers(&SecurityAddon)
+)]
+struct ApiDoc;
+
+/// Initializes the API router
+pub async fn router(secret: String, app_state: AppState) -> Router {
+    Router::new()
+        .merge(SwaggerUi::new("/api-docs").url("/api-docs/runrs-api.json", ApiDoc::openapi()))
+        .merge(
+            Router::new()
+                .route("/gitlab-runners", post(gitlab_runners::create))
+                .route("/gitlab-runners/list", get(gitlab_runners::list))
+                .route(
+                    "/gitlab-runners/:id",
+                    get(gitlab_runners::read)
+                        .put(gitlab_runners::update)
+                        .delete(gitlab_runners::delete),
+                )
+                .layer(middleware::from_fn_with_state(secret, authenticate)),
+        )
+        .with_state(app_state)
+}
+
+/// Holds the state for the API router
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub pool: atmosphere::Pool,
