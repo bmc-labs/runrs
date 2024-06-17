@@ -43,7 +43,7 @@ mod logging {
     pub fn init() -> eyre::Result<()> {
         // Logs in prod environments are often expensive,
         // incurring per-MB costs in some cases (e.g. AWS).
-        // We therefore default to ERROR level for eveything
+        // We therefore default to ERROR level for everything
         // except runrs itself, which defaults to WARN.
         let filter =
             EnvFilter::try_from_default_env().unwrap_or(EnvFilter::try_new("error,runrs=warn")?);
