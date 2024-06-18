@@ -1,11 +1,11 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
+mod app;
 mod auth;
-mod config;
 mod error;
-mod model;
-mod rest;
-mod state;
+mod glrcfg;
+mod handlers;
+mod models;
 
 // Embed database migrations in the binary
 pub(crate) static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
@@ -13,21 +13,22 @@ pub(crate) static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migratio
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     // set envvar defaults and init tracing
-    monitoring::init()?;
+    logging::init()?;
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+
     tracing::info!("REST API on http://{}", listener.local_addr()?);
     tracing::info!("API docs on http://{}/api-docs", listener.local_addr()?);
 
     let secret = auth::init_secret()?;
     let _ = auth::encode_token(&secret)?;
 
-    let app_state = state::AppState::init().await?;
+    let app_state = app::AppState::init().await?;
 
     // initialize router and run app
-    let app = rest::app(secret, app_state).await;
+    let router = app::router(secret, app_state).await;
 
-    if let Err(err) = axum::serve(listener, app).await {
+    if let Err(err) = axum::serve(listener, router).await {
         tracing::error!(%err, "Server stopped");
         eyre::bail!(err);
     }
@@ -35,38 +36,24 @@ async fn main() -> eyre::Result<()> {
     Ok(())
 }
 
-mod monitoring {
-    use std::str::FromStr;
-
-    use tracing::Level;
-    use tracing_subscriber::{filter::Targets, layer::SubscriberExt, util::SubscriberInitExt};
+mod logging {
+    use tracing_subscriber::{util::SubscriberInitExt, EnvFilter};
 
     /// Initializes backtracing and error handling capabilities.
     pub fn init() -> eyre::Result<()> {
-        const BT_ENVVAR: &str = "RUST_LIB_BACKTRACE";
-        if std::env::var(BT_ENVVAR).is_err() {
-            std::env::set_var(BT_ENVVAR, "1")
+        // Logs in prod environments are often expensive,
+        // incurring per-MB costs in some cases (e.g. AWS).
+        // We therefore default to ERROR level for everything
+        // except runrs itself, which defaults to WARN.
+        let filter =
+            EnvFilter::try_from_default_env().unwrap_or(EnvFilter::try_new("error,runrs=warn")?);
+
+        let subscriber = tracing_subscriber::fmt().with_env_filter(filter);
+
+        match std::env::var("LOG_FMT") {
+            Ok(fmt) if fmt == "json" => subscriber.json().finish().init(),
+            _ => subscriber.finish().init(),
         }
-
-        // set up format layer with filtering for tracing
-        const LG_ENVVAR: &str = "RUST_LOG";
-        if std::env::var(LG_ENVVAR).is_err() {
-            std::env::set_var(LG_ENVVAR, "error,runrs=debug")
-        }
-
-        let filter = Targets::from_str(
-            std::env::var("RUST_LOG")
-                .as_deref()
-                .unwrap_or("error,runrs=debug"),
-        )?;
-
-        tracing_subscriber::fmt()
-            .with_max_level(Level::TRACE)
-            // TODO(flrn): turn on JSON once we start logging to a service
-            // .json()
-            .finish()
-            .with(filter)
-            .init();
 
         Ok(())
     }
