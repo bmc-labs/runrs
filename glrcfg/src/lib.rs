@@ -28,8 +28,7 @@ impl Config {
     {
         let config_toml = toml::to_string_pretty(&self).expect("could not serialize to TOML");
 
-        // TODO(flrn): use of tracing needs to be feature gated
-        //             when we turn this into a library
+        #[cfg(feature = "tracing")]
         tracing::debug!(?config_toml, "writing config to disk");
         std::fs::write(path, config_toml)
     }
@@ -42,11 +41,6 @@ pub struct ConfigBuilder {
 }
 
 impl ConfigBuilder {
-    // pub fn with_global_section(mut self, global_section: GlobalSection) -> Self {
-    //     self.global_section = global_section;
-    //     self
-    // }
-
     pub fn with_runners(mut self, runners: Vec<Runner>) -> Self {
         self.runners = runners;
         self

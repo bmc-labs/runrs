@@ -1,0 +1,23 @@
+[package]
+name = "glrcfg"
+description = "A Rust implementation of the GitLab Runner Advanced Configuration file format"
+readme = "README.md"
+
+version = "0.1.0"
+edition = "2021"
+
+license = "Apache-2.0"
+repository.workspace = true
+keywords = ["gitlab", "runner", "runners", "configuration", "config"]
+exclude = [".github"]
+
+authors = ["Florian Eich <florian.eich@bmc-labs.com>"]
+
+[dependencies]
+serde = { version = "1.0.196", features = ["derive"] }
+toml = "0.8.12"
+tracing = { version = "0.1.40", optional = true }
+
+[features]
+default = []
+tracing = ["dep:tracing"]

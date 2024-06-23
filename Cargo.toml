@@ -1,13 +1,25 @@
-[package]
-name = "runrs"
+[workspace]
+members = [".", "glrcfg"]
+
+[workspace.package]
 description = "A microservice to manage GitLab Runners in Docker via REST"
+readme = "README.md"
 
 version = "0.3.0"
 edition = "2021"
 
 license = "Apache-2.0"
 repository = "https://github.com/bmc-labs/runrs"
-keywords = ["gitlab", "runners", "ci/cd", "infra", "peripheral"]
+keywords = [
+    "gitlab",
+    "runner",
+    "runners",
+    "github",
+    "actions",
+    "ci/cd",
+    "infra",
+    "peripheral",
+]
 exclude = [".github", "assets"]
 
 authors = [
@@ -16,12 +28,25 @@ authors = [
     "Florian Eich <florian.eich@bmc-labs.com>",
 ]
 
+[package]
+name = "runrs"
+description.workspace = true
+readme.workspace = true
+
+version.workspace = true
+edition.workspace = true
+
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
 [dependencies]
 atmosphere = { version = "0.2.0", features = ["sqlite"] }
 axum = { version = "0.7.4", features = ["macros", "http2"] }
 axum-extra = { version = "0.9.2", features = ["typed-header"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 eyre = "0.6.12"
+glrcfg = { version = "0.1.0", path = "glrcfg", features = ["tracing"] }
 jsonwebtoken = "9.2.0"
 mime = "0.3.17"
 serde = { version = "1.0.196", features = ["derive"] }

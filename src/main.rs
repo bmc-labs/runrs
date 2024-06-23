@@ -3,7 +3,6 @@
 mod app;
 mod auth;
 mod error;
-mod glrcfg;
 mod handlers;
 mod models;
 

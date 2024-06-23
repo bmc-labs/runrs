@@ -4,9 +4,9 @@ use std::path::PathBuf;
 
 use atmosphere::Read;
 use eyre::WrapErr;
+use glrcfg::{Config, Runner};
 
 use super::GitLabRunner;
-use crate::glrcfg::{Config, Runner};
 
 #[derive(Debug)]
 pub struct GitLabRunnerConfig(Config);

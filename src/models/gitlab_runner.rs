@@ -1,10 +1,9 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use atmosphere::{table, Schema, Table as _};
+use glrcfg::{Docker, Runner};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
-
-use crate::glrcfg::{Docker, Runner};
 
 /// Public API for configuring a single CI/CD job executor, not the GitLab Runner service.
 ///
