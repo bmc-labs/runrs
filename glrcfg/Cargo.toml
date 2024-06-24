@@ -17,6 +17,7 @@ authors = ["Florian Eich <florian.eich@bmc-labs.com>"]
 serde = { version = "1.0.196", features = ["derive"] }
 toml = "0.8.12"
 tracing = { version = "0.1.40", optional = true }
+typed-builder = "0.18.2"
 
 [features]
 default = []
