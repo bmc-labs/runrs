@@ -5,11 +5,12 @@ mod runner;
 
 use std::path;
 
-pub use global_section::GlobalSection;
+pub use global_section::{GlobalSection, LogFormat, LogLevel};
 pub use runner::{Docker, Runner};
 use serde::Serialize;
 
-/// https://docs.gitlab.com/runner/configuration/advanced-configuration.html
+/// Further documentation found in [the GitLab
+/// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section).
 #[derive(Debug, Serialize)]
 pub struct Config {
     #[serde(flatten)]
