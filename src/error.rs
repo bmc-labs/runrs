@@ -51,6 +51,7 @@ impl Error {
 
     pub fn with_description<T: Display>(mut self, desc: T) -> Self {
         self.msg = format!("{}: {}", self.msg, desc);
+        tracing::error!("{}", self.msg);
         self
     }
 
@@ -109,7 +110,7 @@ impl From<sqlx::Error> for Error {
             _ => ErrorType::Other,
         };
 
-        Self { err_type: err, msg }
+        Self::new(err).with_description(msg)
     }
 }
 
@@ -149,7 +150,7 @@ impl From<atmosphere::Error> for Error {
             _ => ErrorType::Other,
         };
 
-        Self { err_type: err, msg }
+        Self::new(err).with_description(msg)
     }
 }
 

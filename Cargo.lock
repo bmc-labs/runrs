@@ -73,9 +73,9 @@ dependencies = [
 
 [[package]]
 name = "atmosphere"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a26775931c851c78387178209f1b79f0777805e1020ddd82f3ae33b2913363a5"
+checksum = "a635c20e74dd7ef6a2b0f777a6de0c545fc5e63ea80f37681aeed49b7efc2ced"
 dependencies = [
  "async-trait",
  "atmosphere-core",
@@ -85,9 +85,9 @@ dependencies = [
 
 [[package]]
 name = "atmosphere-core"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd581d28b28e303e00f00dbeb440b41e0a6daddd925c7486daa43f9f1af50d96"
+checksum = "0e8f5e5e16da30cafdd37cf2c89136e2544ee0769e910ab8c7de8876bb704dcf"
 dependencies = [
  "async-trait",
  "lazy_static",
@@ -98,9 +98,9 @@ dependencies = [
 
 [[package]]
 name = "atmosphere-macros"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffb1e7b9734acf64a3753fafb2ad67f026ae81035384cbc399f8ef0d0e1f33b7"
+checksum = "0187da5a78e99a8800f84b88af5e9ae7bcc9fd65d1553b58f4d36c9b68267f36"
 dependencies = [
  "atmosphere-core",
  "lazy_static",
@@ -640,6 +640,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 
 [[package]]
+name = "glrcfg"
+version = "0.1.0"
+dependencies = [
+ "indoc",
+ "once_cell",
+ "pretty_assertions",
+ "regex",
+ "serde",
+ "toml",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "h2"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -880,6 +894,12 @@ dependencies = [
  "hashbrown",
  "serde",
 ]
+
+[[package]]
+name = "indoc"
+version = "2.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b248f5224d1d606005e02c97f5aa4e88eeb230488bcc03bc9ca4d7991399f2b5"
 
 [[package]]
 name = "itertools"
@@ -1411,9 +1431,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.10.4"
+version = "1.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c117dbdfde9c8308975b6a18d71f3f385c89461f7b3fb054288ecf2a2058ba4c"
+checksum = "b91213439dad192326a0d7c6ee3955910425f441d7038e0d6933b0aec5c4517f"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1497,6 +1517,7 @@ dependencies = [
  "axum-extra",
  "chrono",
  "eyre",
+ "glrcfg",
  "http-body-util",
  "jsonwebtoken",
  "mime",
@@ -2439,13 +2460,14 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "url"
-version = "2.5.0"
+version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31e6302e3bb753d46e83516cae55ae196fc0c309407cf11ab35cc51a4c2a4633"
+checksum = "22784dbdf76fdde8af1aeda5622b546b422b6fc585325248a2bf9f5e41e94d6c"
 dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
