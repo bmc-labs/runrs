@@ -20,7 +20,6 @@ serde = { version = "1.0.196", features = ["derive"] }
 toml = "0.8.12"
 tracing = { version = "0.1.40", optional = true }
 url = { version = "2.5.2", features = ["serde"] }
-validator = { version = "0.18.1", features = ["derive"] }
 
 [features]
 default = []

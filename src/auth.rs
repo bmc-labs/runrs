@@ -2,9 +2,10 @@
 
 use axum::{
     extract::{Request, State},
-    http::{header, HeaderMap},
+    http::{header, HeaderMap, StatusCode},
     middleware::Next,
-    response::{Response, Result},
+    response::{IntoResponse, Response},
+    Json,
 };
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
@@ -80,24 +81,29 @@ pub async fn authenticate(
     State(secret): State<String>,
     request: Request,
     next: Next,
-) -> Result<Response> {
+) -> Response {
     tracing::debug!(?headers, "authenticating request");
+    let err_response = (
+        StatusCode::FORBIDDEN,
+        Json("unable to authenticate request"),
+    )
+        .into_response();
 
-    let token = headers
+    let Some(token) = headers
         .get(header::AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "))
-        .ok_or_else(|| {
-            tracing::warn!(?headers, "no token found in request headers");
-            Error::forbidden("unable to authenticate request")
-        })?;
+    else {
+        tracing::warn!(?headers, "no token found in request headers");
+        return err_response;
+    };
 
-    validate_token(&secret, token).map_err(|_| {
+    if validate_token(&secret, token).is_err() {
         tracing::warn!(?token, "unable to validate token");
-        Error::forbidden("unable to authenticate request")
-    })?;
+        return err_response;
+    };
 
-    Ok(next.run(request).await)
+    next.run(request).await
 }
 
 /// SecurityAddon is a modifier that adds a security scheme to the OpenAPI spec.
