@@ -3,17 +3,17 @@
 use std::path::PathBuf;
 
 use atmosphere::Read;
-use eyre::WrapErr;
 use glrcfg::{Config, Runner};
 
 use super::GitLabRunner;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct GitLabRunnerConfig(Config);
 
 impl GitLabRunnerConfig {
-    pub async fn compile(pool: &atmosphere::Pool) -> eyre::Result<Self> {
-        let runners = GitLabRunner::find_all(pool)
+    pub async fn compile(pool: &atmosphere::Pool) -> Result<Self, Error> {
+        let runners = GitLabRunner::read_all(pool)
             .await?
             .into_iter()
             .map(Runner::from)
@@ -24,12 +24,10 @@ impl GitLabRunnerConfig {
         Ok(Self(config))
     }
 
-    pub async fn write(pool: &atmosphere::Pool, path: &PathBuf) -> eyre::Result<()> {
+    pub async fn write(pool: &atmosphere::Pool, path: &PathBuf) -> Result<(), Error> {
         let Self(config) = Self::compile(pool).await?;
 
         tracing::debug!(?config, "writing config to disk");
-        config
-            .write(path)
-            .wrap_err(format!("unable to write to file at {path:?}"))
+        config.write(path).map_err(Error::internal_error)
     }
 }

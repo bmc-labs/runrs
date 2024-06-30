@@ -36,17 +36,8 @@ pub struct GitLabRunner {
 }
 
 impl GitLabRunner {
-    pub fn update(&mut self, other: Self) -> eyre::Result<()> {
-        if self.id != other.id {
-            eyre::bail!("Cannot update runner with different ID");
-        }
-
-        self.name = other.name;
-        self.url = other.url;
-        self.token = other.token;
-        self.docker_image = other.docker_image;
-
-        Ok(())
+    pub fn compatible_with(&self, other: &Self) -> bool {
+        self.id == other.id
     }
 }
 
@@ -97,16 +88,16 @@ mod tests {
         let mut runner = GitLabRunner::for_testing();
 
         assert!(matches!(
-            GitLabRunner::find(&runner.id, &pool).await,
+            GitLabRunner::read(&pool, &runner.id).await,
             Err(Error::Query(query::QueryError::NotFound(
                 sqlx::Error::RowNotFound,
             )))
         ));
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
-        assert_eq!(GitLabRunner::find(&runner.id, &pool).await?, runner);
+        assert_eq!(GitLabRunner::read(&pool, &runner.id).await?, runner);
         assert_eq!(runner.delete(&pool).await?.rows_affected(), 1);
         assert!(matches!(
-            GitLabRunner::find(&runner.id, &pool).await,
+            GitLabRunner::read(&pool, &runner.id).await,
             Err(Error::Query(query::QueryError::NotFound(
                 sqlx::Error::RowNotFound,
             )))
@@ -122,22 +113,22 @@ mod tests {
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
 
         runner.url = "https://gitlab.bmc-labs.com".to_string();
-        assert_eq!(runner.save(&pool).await?.rows_affected(), 1);
-        assert_eq!(GitLabRunner::find(&runner.id, &pool).await?, runner);
+        assert_eq!(runner.upsert(&pool).await?.rows_affected(), 1);
+        assert_eq!(GitLabRunner::read(&pool, &runner.id).await?, runner);
 
         Ok(())
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn find_all(pool: Pool) -> eyre::Result<()> {
-        assert!(GitLabRunner::find_all(&pool).await?.is_empty());
+        assert!(GitLabRunner::read_all(&pool).await?.is_empty());
 
         let mut runner = GitLabRunner::for_testing();
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
 
-        assert_eq!(GitLabRunner::find_all(&pool).await?, vec![runner.clone()]);
+        assert_eq!(GitLabRunner::read_all(&pool).await?, vec![runner.clone()]);
         assert_eq!(runner.delete(&pool).await?.rows_affected(), 1);
-        assert!(GitLabRunner::find_all(&pool).await?.is_empty());
+        assert!(GitLabRunner::read_all(&pool).await?.is_empty());
 
         Ok(())
     }

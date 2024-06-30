@@ -14,11 +14,13 @@ exclude = [".github"]
 authors = ["Florian Eich <florian.eich@bmc-labs.com>"]
 
 [dependencies]
+once_cell = "1.19.0"
+regex = { version = "1.10.5", features = ["use_std"] }
 serde = { version = "1.0.196", features = ["derive"] }
 toml = "0.8.12"
 tracing = { version = "0.1.40", optional = true }
-typed-builder = "0.18.2"
 url = { version = "2.5.2", features = ["serde"] }
+validator = { version = "0.18.1", features = ["derive"] }
 
 [features]
 default = []
