@@ -45,9 +45,8 @@ pub enum LogFormat {
 pub struct GolangDurationParseError;
 
 /// The Golang standard library [has a `Duration` type](https://pkg.go.dev/time#Duration), which
-/// has a function called `ParseDuration` that accepts a specific format. Examples look like `15m`
-/// for 15 minutes, `1h` for 1 hour, `1h15m` for 1 hour and 15 minutes. This type is a newtype
-/// which enforces this format.
+/// has a function called `ParseDuration` that accepts formatted strings like these: `15m` for 15
+/// minutes, `1h` for 1 hour, `1h15m` for 1 hour and 15 minutes. This type enforces that format.
 #[derive(Debug, PartialEq, Serialize)]
 #[serde(transparent)]
 pub struct GolangDuration(String);

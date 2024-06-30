@@ -5,7 +5,9 @@ mod runner;
 
 use std::path;
 
-pub use global_section::{GlobalSection, LogFormat, LogLevel};
+pub use global_section::{
+    GlobalSection, GolangDuration, GolangDurationParseError, LogFormat, LogLevel,
+};
 pub use runner::{Docker, Runner};
 use serde::Serialize;
 
