@@ -1,6 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use std::{num::NonZeroU32, str::FromStr};
+use std::{error::Error, fmt, num::NonZeroU32, str::FromStr};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -44,6 +44,17 @@ pub enum LogFormat {
 #[derive(Debug, PartialEq, Eq)]
 pub struct GolangDurationParseError;
 
+impl fmt::Display for GolangDurationParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "invalid Golang duration (which look like 15m, 1h, 1h15m, etc.)"
+        )
+    }
+}
+
+impl Error for GolangDurationParseError {}
+
 /// The Golang standard library [has a `Duration` type](https://pkg.go.dev/time#Duration), which
 /// has a function called `ParseDuration` that accepts formatted strings like these: `15m` for 15
 /// minutes, `1h` for 1 hour, `1h15m` for 1 hour and 15 minutes. This type enforces that format.
@@ -59,6 +70,8 @@ impl GolangDuration {
         let duration = duration.into();
 
         if !GOLANG_DURATION_REGEX.is_match(&duration) {
+            #[cfg(feature = "tracing")]
+            tracing::error!("invalid Golang duration: {duration}");
             return Err(GolangDurationParseError);
         }
 
