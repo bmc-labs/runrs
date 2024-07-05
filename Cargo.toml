@@ -51,7 +51,11 @@ chrono = { version = "0.4.38", features = [
     "std",
 ], default-features = false }
 eyre = "0.6.12"
-glrcfg = { version = "0.1.0", path = "glrcfg", features = ["tracing", "sqlx"] }
+glrcfg = { version = "0.1.0", path = "glrcfg", features = [
+    "tracing",
+    "sqlx",
+    "utoipa",
+] }
 jsonwebtoken = "9.2.0"
 mime = "0.3.17"
 names = { version = "0.14.0", default-features = false }
