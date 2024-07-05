@@ -1,9 +1,15 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use atmosphere::{table, Schema, Table as _};
-use glrcfg::{Docker, Runner};
+use glrcfg::runner::{DateTime, Docker, Runner, RunnerToken, Url};
+use names::{Generator, Name};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
+
+fn default_name() -> String {
+    let mut generator = Generator::with_naming(Name::Numbered);
+    generator.next().unwrap_or_else(|| "usain-bolt".to_string())
+}
 
 /// Public API for configuring a single CI/CD job executor, not the GitLab Runner service.
 ///
@@ -23,14 +29,15 @@ use utoipa::{IntoParams, ToSchema};
 pub struct GitLabRunner {
     /// Unique ID of the runner within the GitLab instance
     #[sql(pk)]
-    id: String,
-    /// Runner name (default: "$(hostname)")
-    #[serde(alias = "description")]
+    id: u32,
+    /// Runner name (default: Docker-style random name)
+    #[serde(alias = "description", default = "default_name")]
     name: String,
     /// GitLab instance URL
-    url: String,
+    url: Url,
     /// Runner token
-    token: String,
+    token: RunnerToken,
+    token_obtained_at: DateTime,
     /// Docker image to be used
     docker_image: String,
 }
@@ -43,10 +50,11 @@ impl GitLabRunner {
 
 impl From<GitLabRunner> for Runner {
     fn from(runner: GitLabRunner) -> Self {
-        Runner {
+        Self {
             name: runner.name,
             url: runner.url,
             token: runner.token,
+            token_obtained_at: runner.token_obtained_at,
             docker: Docker {
                 image: runner.docker_image,
             },
@@ -59,20 +67,23 @@ impl From<GitLabRunner> for Runner {
 impl GitLabRunner {
     pub fn for_testing() -> Self {
         GitLabRunner {
-            id: "42".to_string(),
+            id: 42,
             name: "Knows the meaning of life".to_string(),
-            url: "https://gitlab.your-company.com".to_string(),
-            token: "gltok-warblgarbl".to_string(),
+            url: Url::parse("https://gitlab.your-company.com").expect("given string is a URL"),
+            token: RunnerToken::parse("glrt-0123456789abcdef____")
+                .expect("given string is a valid token"),
+            token_obtained_at: DateTime::parse("2024-01-01T00:00:00Z")
+                .expect("given ISO8601 timestamp is valid"),
             docker_image: "alpine:latest".to_string(),
         }
     }
 
-    pub fn id(&self) -> &String {
-        &self.id
+    pub fn id(&self) -> u32 {
+        self.id
     }
 
     pub fn set_url(&mut self, url: &str) {
-        self.url = url.to_string();
+        self.url = Url::parse(url).expect("given string is not a URL");
     }
 }
 
@@ -112,7 +123,7 @@ mod tests {
 
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
 
-        runner.url = "https://gitlab.bmc-labs.com".to_string();
+        runner.url = "https://gitlab.bmc-labs.com".parse()?;
         assert_eq!(runner.upsert(&pool).await?.rows_affected(), 1);
         assert_eq!(GitLabRunner::read(&pool, &runner.id).await?, runner);
 

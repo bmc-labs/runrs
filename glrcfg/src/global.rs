@@ -8,7 +8,7 @@ use serde::Serialize;
 use url::Url;
 
 static GOLANG_DURATION_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^[+-]?(\d+(h|m|s|ms|us|µs|ns))+$").unwrap());
+    Lazy::new(|| Regex::new(r"^([+-]?(\d+(h|m|s|ms|us|µs|ns))+|0)$").unwrap());
 
 /// Defines the log level. Options are `debug`, `info`, `warn`, `error`, `fatal`, and `panic`. This
 /// setting has lower priority than the level set by the command-line arguments `--debug`, `-l`, or
@@ -52,7 +52,7 @@ pub struct GolangDurationParseError;
 pub struct GolangDuration(String);
 
 impl GolangDuration {
-    pub fn new<S>(duration: S) -> Result<Self, GolangDurationParseError>
+    pub fn parse<S>(duration: S) -> Result<Self, GolangDurationParseError>
     where
         S: Into<String>,
     {
@@ -70,7 +70,7 @@ impl FromStr for GolangDuration {
     type Err = GolangDurationParseError;
 
     fn from_str(duration: &str) -> Result<Self, Self::Err> {
-        Self::new(duration)
+        Self::parse(duration)
     }
 }
 
@@ -100,7 +100,7 @@ impl Default for GlobalSection {
             log_format: LogFormat::Json,
             check_interval: 3,
             sentry_dsn: None,
-            connection_max_age: GolangDuration::new("15m").expect("15m is a valid Golang duration"),
+            connection_max_age: GolangDuration::parse("15m").expect("15m is a valid duration"),
             listen_address: None,
             shutdown_timeout: 30,
         }

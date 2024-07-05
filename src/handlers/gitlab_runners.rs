@@ -69,7 +69,7 @@ pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Result<Respo
     get,
     path = "/gitlab-runners/{id}",
     params(
-        ("id" = String, Path, description = "GitLabRunner ID")
+        ("id" = u32, Path, description = "GitLabRunner ID")
     ),
     responses(
         (status = StatusCode::OK, description = "Read all GitLabRunners", body = GitLabRunner),
@@ -80,7 +80,7 @@ pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Result<Respo
 #[tracing::instrument(skip(pool))]
 pub async fn read(
     State(AppState { pool, .. }): State<AppState>,
-    Path(id): Path<String>,
+    Path(id): Path<u32>,
 ) -> Result<Response> {
     tracing::debug!("reading runner from database");
 
@@ -94,7 +94,7 @@ pub async fn read(
     put,
     path = "/gitlab-runners/{id}",
     params(
-        ("id" = String, Path, description = "GitLabRunner ID")
+        ("id" = u32, Path, description = "GitLabRunner ID")
     ),
     request_body(
         content = GitLabRunner, description = "GitLabRunner to update", content_type = "application/json"
@@ -111,7 +111,7 @@ pub async fn update(
     State(AppState {
         pool, config_path, ..
     }): State<AppState>,
-    Path(id): Path<String>,
+    Path(id): Path<u32>,
     Json(mut updated_runner): Json<GitLabRunner>,
 ) -> Result<Response> {
     tracing::debug!(?updated_runner, "updating runner");
@@ -138,7 +138,7 @@ pub async fn update(
     delete,
     path = "/gitlab-runners/{id}",
     params(
-        ("id" = String, Path, description = "GitLabRunner ID")
+        ("id" = u32, Path, description = "GitLabRunner ID")
     ),
     responses(
         (status = StatusCode::OK, description = "Deleted GitLabRunner", body = GitLabRunner),
@@ -151,7 +151,7 @@ pub async fn delete(
     State(AppState {
         pool, config_path, ..
     }): State<AppState>,
-    Path(id): Path<String>,
+    Path(id): Path<u32>,
 ) -> Result<Response> {
     tracing::debug!("deleting runner");
 
@@ -273,7 +273,7 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let runner_from_db = GitLabRunner::read(&app_state.pool, runner.id()).await?;
+        let runner_from_db = GitLabRunner::read(&app_state.pool, &runner.id()).await?;
         assert_eq!(runner_from_db, runner);
 
         std::fs::remove_file(&app_state.config_path)?;

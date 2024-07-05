@@ -1,22 +1,23 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-mod global_section;
-mod runner;
+mod global;
+pub mod runner;
+pub mod session_server;
 
 use std::path;
 
-pub use global_section::{
-    GlobalSection, GolangDuration, GolangDurationParseError, LogFormat, LogLevel,
-};
-pub use runner::{Docker, Runner};
+pub use global::{GlobalSection, GolangDuration, GolangDurationParseError, LogFormat, LogLevel};
+use runner::Runner;
 use serde::Serialize;
+use session_server::SessionServer;
 
 /// Further documentation found in [the GitLab
-/// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section).
+/// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html).
 #[derive(Debug, Serialize)]
 pub struct Config {
     #[serde(flatten)]
-    pub global_section: GlobalSection,
+    pub global: GlobalSection,
+    pub session_server: SessionServer,
     pub runners: Vec<Runner>,
 }
 
@@ -39,7 +40,8 @@ impl Config {
 
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
-    global_section: GlobalSection,
+    global: GlobalSection,
+    session_server: SessionServer,
     runners: Vec<Runner>,
 }
 
@@ -51,7 +53,8 @@ impl ConfigBuilder {
 
     pub fn finish(self) -> Config {
         Config {
-            global_section: self.global_section,
+            global: self.global,
+            session_server: self.session_server,
             runners: self.runners,
         }
     }

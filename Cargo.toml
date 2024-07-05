@@ -44,11 +44,17 @@ authors.workspace = true
 atmosphere = { version = "0.3.0", features = ["sqlite"] }
 axum = { version = "0.7.4", features = ["macros", "http2"] }
 axum-extra = { version = "0.9.2", features = ["typed-header"] }
-chrono = { version = "0.4.38", features = ["serde"] }
+chrono = { version = "0.4.38", features = [
+    "serde",
+    "alloc",
+    "now",
+    "std",
+], default-features = false }
 eyre = "0.6.12"
-glrcfg = { version = "0.1.0", path = "glrcfg", features = ["tracing"] }
+glrcfg = { version = "0.1.0", path = "glrcfg", features = ["tracing", "sqlx"] }
 jsonwebtoken = "9.2.0"
 mime = "0.3.17"
+names = { version = "0.14.0", default-features = false }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 sqlx = { version = "0.7.3", features = ["runtime-tokio", "sqlite", "migrate"] }

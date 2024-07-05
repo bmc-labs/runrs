@@ -317,10 +317,8 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-targets 0.52.5",
 ]
 
@@ -643,11 +641,13 @@ checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 name = "glrcfg"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "indoc",
  "once_cell",
  "pretty_assertions",
  "regex",
  "serde",
+ "sqlx",
  "toml",
  "tracing",
  "url",
@@ -1091,6 +1091,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "names"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7bddcd3bf5144b6392de80e04c347cd7fab2508f6df16a85fc496ecd5cec39bc"
+dependencies = [
+ "rand",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1521,6 +1530,7 @@ dependencies = [
  "http-body-util",
  "jsonwebtoken",
  "mime",
+ "names",
  "pretty_assertions",
  "serde",
  "serde_json",

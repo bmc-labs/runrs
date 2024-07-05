@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use atmosphere::Read;
-use glrcfg::{Config, Runner};
+use glrcfg::{runner::Runner, Config};
 
 use super::GitLabRunner;
 use crate::error::Error;

@@ -18,8 +18,6 @@ use utoipa::{
     Modify,
 };
 
-use crate::error::Error;
-
 const DEFAULT_VALIDITY_PERIOD_HOURS: i64 = 12;
 
 #[derive(Debug, Serialize, Deserialize)]
