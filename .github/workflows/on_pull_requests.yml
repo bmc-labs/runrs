@@ -23,7 +23,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
-      - run: cargo nextest run --cargo-profile release
+      - run: cargo nextest run --workspace --cargo-profile release
         env:
           RUST_BACKTRACE: 1
 
