@@ -36,7 +36,7 @@ components from whatever data model you have using a `Component { field: value, 
 }` pattern.
 
 The components have certain semantics. As an example, the `concurrent` field in the global section
-must be a non-zero positive integer, the `log_level` field must be one of a list of log leves, and
+must be a non-zero positive integer, the `log_level` field must be one of a list of log levels, and
 the `connection_max_age` must be a Golang duration string (e.g. `1h30m`).
 
 Some of these constraints can only be checked at run time.  In other words, `concurrent` is a `u32`
