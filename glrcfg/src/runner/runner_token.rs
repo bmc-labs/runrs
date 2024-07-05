@@ -20,7 +20,6 @@ impl fmt::Display for RunnerTokenParseError {
 impl Error for RunnerTokenParseError {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 #[serde(transparent)]
 pub struct RunnerToken(String);
 

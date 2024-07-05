@@ -8,7 +8,6 @@ use axum::{
     Router,
 };
 use eyre::WrapErr;
-use glrcfg::runner;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -36,9 +35,6 @@ pub const DEFAULT_CONFIG_PATH: &str = "/tmp/gitlab-runner/config.toml";
             error::Error,
             error::ErrorType,
             models::GitLabRunner,
-            runner::RunnerToken,
-            runner::DateTime,
-            runner::Url,
         )
     ),
     tags(

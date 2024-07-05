@@ -651,7 +651,6 @@ dependencies = [
  "toml",
  "tracing",
  "url",
- "utoipa",
 ]
 
 [[package]]
@@ -2510,6 +2509,7 @@ dependencies = [
  "quote",
  "regex",
  "syn 2.0.65",
+ "url",
 ]
 
 [[package]]

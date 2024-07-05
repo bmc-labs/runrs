@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 /// [`chrono::DateTime<chrono::Utc>`]. Used as timestamp for the `token_obtained_at` and
 /// `token_expires_at` fields in [`Runner`].
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 pub struct DateTime(chrono::DateTime<chrono::Utc>);
 
 impl DateTime {

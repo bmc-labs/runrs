@@ -32,13 +32,19 @@ pub struct GitLabRunner {
     id: u32,
     /// Runner name (default: Docker-style random name)
     #[serde(alias = "description", default = "default_name")]
+    #[schema(example = "usain-bolt")]
     name: String,
     /// GitLab instance URL
+    #[schema(value_type = String, format = Uri, example = "https://gitlab.your-company.com")]
     url: Url,
-    /// Runner token
+    /// Runner token, obtained from the GitLab instance. Format: `glrt-` followed by 20 characters
+    /// from the set `[0-9a-f_]`.
+    #[schema(value_type = String, example = "glrt-0123456789abcdef____")]
     token: RunnerToken,
+    #[schema(value_type = String, format = DateTime, example = "2024-01-01T00:00:00Z")]
     token_obtained_at: DateTime,
     /// Docker image to be used
+    #[schema(example = "alpine:latest")]
     docker_image: String,
 }
 
