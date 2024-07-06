@@ -9,8 +9,16 @@ use serde::{Deserialize, Serialize};
 pub struct Url(url::Url);
 
 impl Url {
+    #[cfg(not(feature = "miette"))]
     pub fn parse(url: &str) -> Result<Self, url::ParseError> {
         Ok(Self(url::Url::parse(url)?))
+    }
+
+    #[cfg(feature = "miette")]
+    pub fn parse(url: &str) -> Result<Self, miette::Diagnostic> {
+        Ok(Self(
+            url::Url::parse(url).map_err(|e| miette::Diagnostic::from_error(e))?,
+        ))
     }
 
     pub fn as_str(&self) -> &str {
@@ -25,7 +33,11 @@ impl fmt::Display for Url {
 }
 
 impl FromStr for Url {
+    #[cfg(not(feature = "miette"))]
     type Err = url::ParseError;
+
+    #[cfg(feature = "miette")]
+    type Err = miette::Diagnostic;
 
     fn from_str(token: &str) -> Result<Self, Self::Err> {
         Self::parse(token)

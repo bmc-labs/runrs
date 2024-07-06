@@ -1,23 +1,19 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use std::{error::Error, fmt, str::FromStr};
+use std::fmt;
+use std::str::FromStr;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^glrt-\w{20}$").unwrap());
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Error)]
+#[cfg_attr(feature = "miette", derive(miette::Diagnostic))]
+#[error("invalid runner token")]
 pub struct RunnerTokenParseError;
-
-impl fmt::Display for RunnerTokenParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "invalid runner token")
-    }
-}
-
-impl Error for RunnerTokenParseError {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(transparent)]

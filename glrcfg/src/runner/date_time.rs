@@ -15,12 +15,25 @@ impl DateTime {
         Self(chrono::Utc::now())
     }
 
+    #[cfg(not(feature = "miette"))]
     pub fn parse<S>(iso8601: S) -> Result<Self, chrono::ParseError>
     where
         S: Into<String>,
     {
         Ok(Self(
             chrono::DateTime::parse_from_rfc3339(&iso8601.into())?.with_timezone(&chrono::Utc),
+        ))
+    }
+
+    #[cfg(feature = "miette")]
+    pub fn parse<S>(iso8601: S) -> Result<Self, miette::Diagnostic>
+    where
+        S: Into<String>,
+    {
+        Ok(Self(
+            chrono::DateTime::parse_from_rfc3339(&iso8601.into())
+                .map_err(|e| miette::Diagnostic::from_error(e))?
+                .with_timezone(&chrono::Utc),
         ))
     }
 
@@ -36,7 +49,11 @@ impl fmt::Display for DateTime {
 }
 
 impl FromStr for DateTime {
+    #[cfg(not(feature = "miette"))]
     type Err = chrono::ParseError;
+
+    #[cfg(feature = "miette")]
+    type Err = miette::Diagnostic;
 
     fn from_str(iso8601: &str) -> Result<Self, Self::Err> {
         Self::parse(iso8601)

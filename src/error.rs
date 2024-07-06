@@ -7,11 +7,12 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use miette::Diagnostic;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use utoipa::{ToResponse, ToSchema};
 
-#[derive(Debug, Error, PartialEq, Eq, Serialize, Deserialize, ToResponse, ToSchema)]
+#[derive(Debug, PartialEq, Eq, Error, Diagnostic, Serialize, Deserialize, ToResponse, ToSchema)]
 #[non_exhaustive]
 pub enum ErrorType {
     #[error("connection failed")]

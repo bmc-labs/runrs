@@ -27,31 +27,31 @@ pub struct Claims {
 }
 
 impl Claims {
-    pub fn new(validity_period_days: Option<i64>) -> eyre::Result<Self> {
+    pub fn new(validity_period_days: Option<i64>) -> miette::Result<Self> {
         let iss = "peripheral".to_string();
         let exp = Utc::now()
             .checked_add_signed(TimeDelta::hours(
                 validity_period_days.unwrap_or(DEFAULT_VALIDITY_PERIOD_HOURS),
             ))
-            .ok_or(eyre::eyre!("could not calculate expiration time"))?
+            .ok_or(miette::miette!("could not calculate expiration time"))?
             .timestamp() as usize;
 
         Ok(Self { iss, exp })
     }
 }
 
-pub fn init_secret() -> eyre::Result<String> {
+pub fn init_secret() -> miette::Result<String> {
     let Ok(secret) = std::env::var("SECRET") else {
         let err_msg = "SECRET not set in environment";
 
         tracing::error!(err_msg);
-        eyre::bail!(err_msg);
+        miette::bail!(err_msg);
     };
 
     Ok(secret)
 }
 
-pub fn encode_token(secret: &str) -> eyre::Result<String> {
+pub fn encode_token(secret: &str) -> miette::Result<String> {
     let token = encode(
         &Header::default(),
         &Claims::new(None)?,
@@ -62,7 +62,7 @@ pub fn encode_token(secret: &str) -> eyre::Result<String> {
     Ok(token)
 }
 
-pub fn validate_token(secret: &str, token: &str) -> eyre::Result<Claims> {
+pub fn validate_token(secret: &str, token: &str) -> miette::Result<Claims> {
     let token_data = decode::<Claims>(
         token,
         &DecodingKey::from_secret(secret.as_ref()),

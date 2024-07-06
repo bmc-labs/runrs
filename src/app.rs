@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use eyre::WrapErr;
+use miette::WrapErr;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -77,7 +77,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn init() -> eyre::Result<Self> {
+    pub async fn init() -> miette::Result<Self> {
         Ok(Self {
             pool: init_database().await?,
             config_path: init_config_path()?,
@@ -97,7 +97,7 @@ impl AppState {
     }
 }
 
-async fn init_database() -> eyre::Result<atmosphere::Pool> {
+async fn init_database() -> miette::Result<atmosphere::Pool> {
     let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
         tracing::warn!("DATABASE_URL not set, using in-memory database");
         DEFAULT_DATABASE_URL.to_string()
@@ -107,19 +107,19 @@ async fn init_database() -> eyre::Result<atmosphere::Pool> {
         Ok(pool) => pool,
         Err(err) => {
             tracing::error!(%err, "Failed to connect to database");
-            eyre::bail!(err);
+            miette::bail!(err);
         }
     };
 
     if let Err(err) = crate::MIGRATOR.run(&pool).await {
         tracing::error!(%err, "Failed to run migrations");
-        eyre::bail!(err);
+        miette::bail!(err);
     }
 
     Ok(pool)
 }
 
-fn init_config_path() -> eyre::Result<PathBuf> {
+fn init_config_path() -> miette::Result<PathBuf> {
     let config_path = std::env::var("CONFIG_PATH").map_or_else(
         |_| {
             tracing::warn!("CONFIG_PATH not set, using default path '{DEFAULT_CONFIG_PATH}'");

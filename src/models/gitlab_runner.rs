@@ -63,6 +63,7 @@ impl From<GitLabRunner> for Runner {
             token_obtained_at: runner.token_obtained_at,
             docker: Docker {
                 image: runner.docker_image,
+                ..Default::default()
             },
             ..Default::default()
         }
@@ -101,7 +102,7 @@ mod tests {
     use super::GitLabRunner;
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
-    async fn create_delete(pool: Pool) -> eyre::Result<()> {
+    async fn create_delete(pool: Pool) -> miette::Result<()> {
         let mut runner = GitLabRunner::for_testing();
 
         assert!(matches!(
@@ -124,7 +125,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
-    async fn update(pool: Pool) -> eyre::Result<()> {
+    async fn update(pool: Pool) -> miette::Result<()> {
         let mut runner = GitLabRunner::for_testing();
 
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
@@ -137,7 +138,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
-    async fn find_all(pool: Pool) -> eyre::Result<()> {
+    async fn find_all(pool: Pool) -> miette::Result<()> {
         assert!(GitLabRunner::read_all(&pool).await?.is_empty());
 
         let mut runner = GitLabRunner::for_testing();
