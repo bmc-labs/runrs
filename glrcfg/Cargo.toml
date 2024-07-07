@@ -38,4 +38,6 @@ miette = ["dep:miette"]
 [dev-dependencies]
 indoc = "2.0.5"
 pretty_assertions = "1.4.0"
+proptest = "1.5.0"
+test-strategy = "0.4.0"
 toml = "0.8.12"
