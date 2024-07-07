@@ -1,7 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use std::fmt;
-use std::str::FromStr;
+use std::{fmt, str::FromStr};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
