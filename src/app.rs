@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use miette::WrapErr;
+use miette::IntoDiagnostic;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -137,11 +137,11 @@ fn init_config_path() -> miette::Result<PathBuf> {
         if let Some(base_path) = config_path.parent() {
             if !base_path.exists() {
                 tracing::warn!(?base_path, "Config directory not found, creating it");
-                std::fs::create_dir_all(base_path).wrap_err("could not create config directory")?;
+                std::fs::create_dir_all(base_path).into_diagnostic()?;
             }
         }
 
-        File::create(&config_path).wrap_err("could not create config file")?;
+        File::create(&config_path).into_diagnostic()?;
     }
 
     Ok(config_path)

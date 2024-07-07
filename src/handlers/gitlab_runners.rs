@@ -185,9 +185,11 @@ mod tests {
         models::GitLabRunner,
     };
 
+    type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
-    async fn create_delete(pool: atmosphere::Pool) -> eyre::Result<()> {
+    async fn create_delete(pool: atmosphere::Pool) -> Result<()> {
         let secret = "test-secret".to_string();
         let app_state = AppState::for_testing(pool);
 
@@ -250,7 +252,7 @@ mod tests {
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     #[tracing_test::traced_test]
-    async fn update(pool: atmosphere::Pool) -> eyre::Result<()> {
+    async fn update(pool: atmosphere::Pool) -> Result<()> {
         let secret = "test-secret".to_string();
         let app_state = AppState::for_testing(pool);
 

@@ -9,6 +9,7 @@ use axum::{
 };
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use utoipa::{
     openapi::{
@@ -56,9 +57,10 @@ pub fn encode_token(secret: &str) -> miette::Result<String> {
         &Header::default(),
         &Claims::new(None)?,
         &EncodingKey::from_secret(secret.as_ref()),
-    )?;
-    tracing::info!(?token, "generated token");
+    )
+    .into_diagnostic()?;
 
+    tracing::info!(?token, "generated token");
     Ok(token)
 }
 
@@ -67,9 +69,10 @@ pub fn validate_token(secret: &str, token: &str) -> miette::Result<Claims> {
         token,
         &DecodingKey::from_secret(secret.as_ref()),
         &Validation::default(),
-    )?;
-    tracing::info!("token is valid");
+    )
+    .into_diagnostic()?;
 
+    tracing::info!("token is valid");
     Ok(token_data.claims)
 }
 
