@@ -7,7 +7,11 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^glrt-\w{20}$").unwrap());
+static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-\w{20}";
+static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!("^{RUNNER_TOKEN_REGEX_STR}$"))
+        .expect("unable to instantiate RUNNER_TOKEN_REGEX from given static string")
+});
 
 #[derive(Debug, PartialEq, Eq, Error)]
 #[cfg_attr(feature = "miette", derive(miette::Diagnostic))]
@@ -103,5 +107,22 @@ where
     ) -> Result<Self, Box<dyn std::error::Error + 'static + Send + Sync>> {
         let value = <String as sqlx::Decode<DB>>::decode(value)?;
         Ok(RunnerToken::parse(value)?)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use test_strategy::proptest;
+
+    use super::{RunnerToken, RUNNER_TOKEN_REGEX, RUNNER_TOKEN_REGEX_STR};
+
+    #[proptest]
+    fn parse_valid_runner_tokens(#[strategy(RUNNER_TOKEN_REGEX_STR)] token: String) {
+        assert!(RunnerToken::parse(token).is_ok());
+    }
+
+    #[proptest]
+    fn parse_invalid_runner_tokens(#[filter(|t| !RUNNER_TOKEN_REGEX.is_match(&t))] token: String) {
+        assert!(RunnerToken::parse(token).is_err());
     }
 }

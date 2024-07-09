@@ -8,8 +8,11 @@ use serde::Serialize;
 use thiserror::Error;
 use url::Url;
 
-static GOLANG_DURATION_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^([+-]?(\d+(h|m|s|ms|us|µs|ns))+|0)$").unwrap());
+static GOLANG_DURATION_REGEX_STR: &str = r"([+-]?(\d+(h|m|s|ms|us|µs|ns))+|0)";
+static GOLANG_DURATION_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!(r"^{GOLANG_DURATION_REGEX_STR}$"))
+        .expect("unable to instantiate GOLANG_DURATION_REGEX from given static string")
+});
 
 /// Defines the log level. Options are `debug`, `info`, `warn`, `error`, `fatal`, and `panic`. This
 /// setting has lower priority than the level set by the command-line arguments `--debug`, `-l`, or
@@ -115,8 +118,9 @@ impl Default for GlobalSection {
 #[cfg(test)]
 mod test {
     use pretty_assertions::assert_eq;
+    use test_strategy::proptest;
 
-    use super::*;
+    use super::{GlobalSection, GolangDuration, GOLANG_DURATION_REGEX, GOLANG_DURATION_REGEX_STR};
 
     #[test]
     fn test_default() {
@@ -135,5 +139,17 @@ mod test {
                 shutdown_timeout = 30
             "#}
         );
+    }
+
+    #[proptest]
+    fn parse_valid_golang_durations(#[strategy(GOLANG_DURATION_REGEX_STR)] token: String) {
+        assert!(GolangDuration::parse(token).is_ok());
+    }
+
+    #[proptest]
+    fn parse_invalid_golang_durations(
+        #[filter(|t| !GOLANG_DURATION_REGEX.is_match(&t))] token: String,
+    ) {
+        assert!(GolangDuration::parse(token).is_err());
     }
 }
