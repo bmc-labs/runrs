@@ -1,6 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use std::{num::NonZeroU32, str::FromStr};
+use std::{fmt, num::NonZeroU32, str::FromStr};
 
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -53,11 +53,20 @@ pub struct GolangDurationParseError;
 /// The Golang standard library [has a `Duration` type](https://pkg.go.dev/time#Duration), which
 /// has a function called `ParseDuration` that accepts formatted strings like these: `15m` for 15
 /// minutes, `1h` for 1 hour, `1h15m` for 1 hour and 15 minutes. This type enforces that format.
-#[derive(Debug, PartialEq, Serialize)]
+///
+/// # Example
+///
+/// ```
+/// # use glrcfg::GolangDuration;
+/// let duration = GolangDuration::parse("15m").unwrap();
+/// assert_eq!(duration.as_str(), "15m");
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(transparent)]
 pub struct GolangDuration(String);
 
 impl GolangDuration {
+    /// Parses a Golang durection from an `Into<String>`, e.g. a `&str` or `String`.
     pub fn parse<S>(duration: S) -> Result<Self, GolangDurationParseError>
     where
         S: Into<String>,
@@ -71,6 +80,17 @@ impl GolangDuration {
         }
 
         Ok(Self(duration))
+    }
+
+    /// Returns the Golang duration as a string slice.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for GolangDuration {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
@@ -143,12 +163,12 @@ mod test {
 
     #[proptest]
     fn parse_valid_golang_durations(#[strategy(GOLANG_DURATION_REGEX_STR)] token: String) {
-        assert!(GolangDuration::parse(token).is_ok());
+        assert_eq!(token, GolangDuration::parse(&token).unwrap().as_str());
     }
 
     #[proptest]
     fn parse_invalid_golang_durations(
-        #[filter(|t| !GOLANG_DURATION_REGEX.is_match(&t))] token: String,
+        #[filter(|t| !GOLANG_DURATION_REGEX.is_match(t))] token: String,
     ) {
         assert!(GolangDuration::parse(token).is_err());
     }
