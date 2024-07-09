@@ -14,7 +14,6 @@ static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
 });
 
 #[derive(Debug, PartialEq, Eq, Error)]
-#[cfg_attr(feature = "miette", derive(miette::Diagnostic))]
 #[error("invalid runner token")]
 pub struct RunnerTokenParseError;
 

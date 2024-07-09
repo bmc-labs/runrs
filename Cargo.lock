@@ -657,7 +657,6 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "indoc",
- "miette 7.2.0",
  "once_cell",
  "pretty_assertions",
  "proptest",

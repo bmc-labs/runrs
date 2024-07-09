@@ -67,35 +67,3 @@ impl Default for Runner {
         }
     }
 }
-
-//  1   │ concurrent = 1
-//  2   │ check_interval = 0
-//  3   │ shutdown_timeout = 0
-//  4   │
-//  5   │ [session_server]
-//  6   │   session_timeout = 1800
-//  7   │
-//  8   │ [[runners]]
-//  9   │   name = "wntrmt"
-// 10   │   url = "https://gitlab.bmc-labs.com"
-// 11   │   id = 18
-// 12   │   token = "glrt-V4yPR_ePd2WsSoPqx9t9"
-// 13   │   token_obtained_at = 2024-06-22T02:25:56Z
-// 14   │   token_expires_at = 0001-01-01T00:00:00Z
-// 15   │   executor = "docker"
-// 16   │   [runners.custom_build_dir]
-// 17   │   [runners.cache]
-// 18   │     MaxUploadedArchiveSize = 0
-// 19   │     [runners.cache.s3]
-// 20   │     [runners.cache.gcs]
-// 21   │     [runners.cache.azure]
-// 22   │   [runners.docker]
-// 23   │     tls_verify = false
-// 24   │     image = "alpine:latest"
-// 25   │     privileged = false
-// 26   │     disable_entrypoint_overwrite = false
-// 27   │     oom_kill_disable = false
-// 28   │     disable_cache = false
-// 29   │     volumes = ["/cache"]
-// 30   │     shm_size = 0
-// 31   │     network_mtu = 0

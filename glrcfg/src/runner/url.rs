@@ -4,23 +4,30 @@ use std::{fmt, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 
+/// An URL. Used for several fields, this wrapper type for the [`url::Url`](url::Url) type enables
+/// input validation while allowing us to implement serialization and deserialization, as well as
+/// [SQLx](https://docs.rs/sqlx) support (you'll have to enable the `sqlx` feature to get that).
+///
+/// # Example
+///
+/// It works just like the underlying `url::Url` type.
+///
+/// ```rust
+/// # use glrcfg::runner::Url;
+/// let url = Url::parse("https://warbl.garbl.com").unwrap();
+/// assert_eq!("https://warbl.garbl.com/", url.as_str());
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(transparent)]
 pub struct Url(url::Url);
 
 impl Url {
-    #[cfg(not(feature = "miette"))]
+    /// Parses a URL from an `Into<String>`, e.g. a `&str` or `String`.
     pub fn parse(url: &str) -> Result<Self, url::ParseError> {
         Ok(Self(url::Url::parse(url)?))
     }
 
-    #[cfg(feature = "miette")]
-    pub fn parse(url: &str) -> Result<Self, miette::Diagnostic> {
-        Ok(Self(
-            url::Url::parse(url).map_err(|e| miette::Diagnostic::from_error(e))?,
-        ))
-    }
-
+    /// Returns the URL as a string slice.
     pub fn as_str(&self) -> &str {
         self.0.as_str()
     }
@@ -33,11 +40,7 @@ impl fmt::Display for Url {
 }
 
 impl FromStr for Url {
-    #[cfg(not(feature = "miette"))]
     type Err = url::ParseError;
-
-    #[cfg(feature = "miette")]
-    type Err = miette::Diagnostic;
 
     fn from_str(token: &str) -> Result<Self, Self::Err> {
         Self::parse(token)

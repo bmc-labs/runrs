@@ -46,7 +46,6 @@ pub enum LogFormat {
 }
 
 #[derive(Debug, PartialEq, Eq, Error)]
-#[cfg_attr(feature = "miette", derive(miette::Diagnostic))]
 #[error("invalid Golang duration (which look like 15m, 1h, 1h15m, etc.)")]
 pub struct GolangDurationParseError;
 
