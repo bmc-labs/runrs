@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// A datetime type that serializes to and from ISO8601 strings. Based on
 /// [`chrono::DateTime<chrono::Utc>`]. Used as timestamp for the `token_obtained_at` and
-/// `token_expires_at` fields in [`Runner`].
+/// `token_expires_at` fields in [`Runner`](crate::Runner).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DateTime(chrono::DateTime<chrono::Utc>);
 
