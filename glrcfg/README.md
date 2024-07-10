@@ -24,9 +24,14 @@ like to keep it to a minimum.)
 
 ## Usage
 
-Well, `cargo add glrcfg` and you're good to go. There's docs and there's [the official GitLab docs
-for the format](https://docs.gitlab.com/runner/configuration/advanced-configuration.html) - we keep
-all terminology and defaults exactly as they are there.
+Run `cargo add glrcfg` and you're good to go. There's docs and there's [the official GitLab docs for
+the format](https://docs.gitlab.com/runner/configuration/advanced-configuration.html) - we keep all
+terminology and defaults exactly as they are there.
+
+Take a look at the `glrcfg` crate's documentation for details on how to use it, specifically its
+feature flags. There is a `tracing` feature which turns on some logging via `tracing`, and an `sqlx`
+feature which implements the [SQLx traits](https://docs.rs/sqlx/latest/sqlx/#traits) `sqlx::Type`,
+`sqlx::Encode` and `sqlx::Decode` traits for our types so you use them as database fields.
 
 ### A word on ergonomics
 
@@ -37,20 +42,10 @@ components from whatever data model you have using a `Component { field: value, 
 
 The components have certain semantics. As an example, the `concurrent` field in the global section
 must be a non-zero positive integer, the `log_level` field must be one of a list of log levels, and
-the `connection_max_age` must be a Golang duration string (e.g. `1h30m`).
-
-Some of these constraints can only be checked at run time.  In other words, `concurrent` is a `u32`
-and there's an enum for `log_level` - but you can still set `concurrent` to zero and pass
-`connection_max_age` any random string. We could, of course, have solved this via newtypes which
-implement the constraints, but that wouldn't have looked very good with respect to the above
-described ergonomics, so we didn't.
-
-The components do, of course, have certain semantics which are not enforced this way
-(although, for example, if something expects a URL, you'll have to hand it a `url::Url` type, and
-such). As an example, if you set `concurrent` in the global section to zero, the resulting config
-will be invalid and `gitlab-runner` will not accept it.
-
-
+the `connection_max_age` must be a Golang duration string (e.g. `1h30m`). This library uses or
+implements types which enforce these constraints, so that invalid configurations are impossible to
+create. In other words: it is not possible to just pass a `&str` as a Golang duration string - you
+must use `GolangDuration::parse("1h30m")` (or `"1h30m".parse()`) and pass the result. 
 
 
 ## Support

@@ -35,7 +35,7 @@ We don't recommend you do (just yet). If you insist: use the Docker container we
 sure it has access to the GitLab Runner configuration file. You do so by passing the path to it via
 the `CONFIG_PATH` environment variable.
 
-If you want to persist the SQLite database (e.g. because you want your rnuner setup to survive
+If you want to persist the SQLite database (e.g. because you want your runner setup to survive
 reboots, or because you're running several replicas of `runrs` for some reason), you can pass it any
 URL that SQLite would understand - most commonly a path to a file on disk - via the `DATABASE_URL`
 environment variable.
