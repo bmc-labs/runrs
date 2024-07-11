@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS gitlab_runners (
     token_obtained_at TEXT    NOT NULL,
     docker_image      TEXT    NOT NULL,
     UNIQUE(id, url, token)
-);
+) STRICT;
