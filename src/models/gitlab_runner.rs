@@ -1,7 +1,7 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 use atmosphere::{table, Schema, Table as _};
-use glrcfg::runner::{DateTime, Docker, Runner, RunnerToken, Url};
+use glrcfg::runner::{DateTime, Docker, Executor, Runner, RunnerToken, Url};
 use names::{Generator, Name};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
@@ -61,9 +61,11 @@ impl From<GitLabRunner> for Runner {
             url: runner.url,
             token: runner.token,
             token_obtained_at: runner.token_obtained_at,
-            docker: Docker {
-                image: runner.docker_image,
-                ..Default::default()
+            executor: Executor::Docker {
+                docker: Docker {
+                    image: runner.docker_image,
+                    ..Default::default()
+                },
             },
             ..Default::default()
         }

@@ -1,12 +1,12 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 mod date_time;
-mod docker;
+mod executors;
 mod runner_token;
 mod url;
 
 pub use date_time::DateTime;
-pub use docker::Docker;
+pub use executors::{Docker, Executor};
 pub use runner_token::{RunnerToken, RunnerTokenParseError};
 use serde::Serialize;
 pub use url::Url;
@@ -37,14 +37,14 @@ pub struct Runner {
     /// and can be set here.
     pub token_expires_at: DateTime,
     pub limit: u32,
-    pub executor: String,
+    #[serde(flatten)]
+    pub executor: Executor,
     pub builds_dir: String,
     pub cache_dir: String,
     /// Used to set environment variables for a runner or job. Example: `["FOO=bar", "BAZ=qux"]`
     pub environment: Vec<String>,
     pub request_concurrency: u32,
     pub output_limit: u32,
-    pub docker: Docker,
 }
 
 impl Default for Runner {
@@ -59,13 +59,14 @@ impl Default for Runner {
             token_expires_at: DateTime::parse("0001-01-01T00:00:00Z")
                 .expect("given string is a valid ISO8601 timestamp"),
             limit: 0,
-            executor: "docker".to_string(),
+            executor: Executor::Docker {
+                docker: Default::default(),
+            },
             builds_dir: "".to_string(),
             cache_dir: "".to_string(),
             environment: vec![],
             request_concurrency: 1,
             output_limit: 4096,
-            docker: Default::default(),
         }
     }
 }
