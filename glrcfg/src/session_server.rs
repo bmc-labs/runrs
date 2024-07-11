@@ -9,6 +9,8 @@ use url::Url;
 /// The `[session_server]` section should be specified at the root level, not per runner. It should
 /// be defined outside the `[[runners]]` section.
 ///
+/// See the [`Default` implementation](Self::default) for the default values.
+///
 /// Further documentation found in [the GitLab
 /// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-session_server-section).
 #[derive(Debug, Serialize)]

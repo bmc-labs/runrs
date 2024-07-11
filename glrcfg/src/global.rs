@@ -103,6 +103,8 @@ impl FromStr for GolangDuration {
 
 /// These settings are global. They apply to all runners.
 ///
+/// See the [`Default` implementation](Self::default) for the default values.
+///
 /// Further documentation found in [the GitLab
 /// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section).
 #[derive(Debug, Serialize)]

@@ -19,7 +19,7 @@ impl GitLabRunnerConfig {
             .map(Runner::from)
             .collect();
 
-        let config = Config::builder().with_runners(runners).finish();
+        let config = Config::builder().with_runners(runners).build();
 
         Ok(Self(config))
     }

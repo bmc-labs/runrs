@@ -13,6 +13,8 @@ pub use url::Url;
 
 /// Defines one runner.
 ///
+/// See the [`Default` implementation](Self::default) for the default values.
+///
 /// Further documentation found in [the GitLab
 /// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runners-section).
 #[derive(Debug, Serialize)]
@@ -48,10 +50,10 @@ pub struct Runner {
 impl Default for Runner {
     fn default() -> Self {
         Self {
-            id: 42,
+            id: 1,
             name: "default".to_string(),
             url: Url::parse("https://gitlab.com/").expect("given string is a URL"),
-            token: RunnerToken::parse("glrt-0123456789abcdef____")
+            token: RunnerToken::parse("glrt-0123456789_abcdefXYZ")
                 .expect("given string is a valid token"),
             token_obtained_at: DateTime::now(),
             token_expires_at: DateTime::parse("0001-01-01T00:00:00Z")

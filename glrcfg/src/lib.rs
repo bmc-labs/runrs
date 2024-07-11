@@ -51,7 +51,7 @@ impl ConfigBuilder {
         self
     }
 
-    pub fn finish(self) -> Config {
+    pub fn build(self) -> Config {
         Config {
             global: self.global,
             session_server: self.session_server,
