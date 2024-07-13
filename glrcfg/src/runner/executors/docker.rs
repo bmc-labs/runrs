@@ -131,9 +131,15 @@ impl Default for Docker {
     }
 }
 
+/// sysctl options for docker
 #[derive(Debug, Serialize)]
 pub struct Sysctls {}
 
+/// Specify additional services that should be run with the job.
+///
+/// Visit the [Docker Registry](https://hub.docker.com/) for the list of available images.
+/// Each service runs in a separate container and is linked to the job.
+/// Further documentation found in the [GitLab Docs](https://archives.docs.gitlab.com/15.11/runner/configuration/advanced-configuration.html#the-runnersdockerservices-section)
 #[derive(Debug, Serialize)]
 pub struct Services {
     pub name: String,

@@ -2,7 +2,7 @@
 
 mod docker;
 
-pub use docker::Docker;
+pub use docker::{Docker, Services, Sysctls};
 use serde::Serialize;
 
 /// The following executors are available.
