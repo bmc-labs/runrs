@@ -10,7 +10,7 @@ macro_rules! stringvec {
 /// or any container runtime configured inside a job, does not inherit these parameters.
 ///
 /// Further documentation found in [the GitLab
-/// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-global-section).
+/// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersdocker-section).
 #[derive(Debug, Serialize)]
 pub struct Docker {
     #[serde(skip_serializing_if = "Option::is_none")]
