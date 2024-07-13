@@ -7,11 +7,12 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use miette::Diagnostic;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use utoipa::{ToResponse, ToSchema};
 
-#[derive(Debug, Error, PartialEq, Eq, Serialize, Deserialize, ToResponse, ToSchema)]
+#[derive(Debug, PartialEq, Eq, Error, Diagnostic, Serialize, Deserialize, ToResponse, ToSchema)]
 #[non_exhaustive]
 pub enum ErrorType {
     #[error("connection failed")]
@@ -51,6 +52,7 @@ impl Error {
 
     pub fn with_description<T: Display>(mut self, desc: T) -> Self {
         self.msg = format!("{}: {}", self.msg, desc);
+        tracing::error!("{}", self.msg);
         self
     }
 
@@ -109,7 +111,7 @@ impl From<sqlx::Error> for Error {
             _ => ErrorType::Other,
         };
 
-        Self { err_type: err, msg }
+        Self::new(err).with_description(msg)
     }
 }
 
@@ -149,7 +151,7 @@ impl From<atmosphere::Error> for Error {
             _ => ErrorType::Other,
         };
 
-        Self { err_type: err, msg }
+        Self::new(err).with_description(msg)
     }
 }
 

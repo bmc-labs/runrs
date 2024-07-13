@@ -1,19 +1,23 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-mod global_section;
-mod runner;
+mod global;
+pub mod runner;
+pub mod session_server;
 
 use std::path;
 
-pub use global_section::GlobalSection;
-pub use runner::{Docker, Runner};
+pub use global::{GlobalSection, GolangDuration, GolangDurationParseError, LogFormat, LogLevel};
+use runner::Runner;
 use serde::Serialize;
+use session_server::SessionServer;
 
-/// https://docs.gitlab.com/runner/configuration/advanced-configuration.html
+/// Further documentation found in [the GitLab
+/// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html).
 #[derive(Debug, Serialize)]
 pub struct Config {
     #[serde(flatten)]
-    pub global_section: GlobalSection,
+    pub global: GlobalSection,
+    pub session_server: SessionServer,
     pub runners: Vec<Runner>,
 }
 
@@ -28,8 +32,7 @@ impl Config {
     {
         let config_toml = toml::to_string_pretty(&self).expect("could not serialize to TOML");
 
-        // TODO(flrn): use of tracing needs to be feature gated
-        //             when we turn this into a library
+        #[cfg(feature = "tracing")]
         tracing::debug!(?config_toml, "writing config to disk");
         std::fs::write(path, config_toml)
     }
@@ -37,24 +40,21 @@ impl Config {
 
 #[derive(Debug, Default)]
 pub struct ConfigBuilder {
-    global_section: GlobalSection,
+    global: GlobalSection,
+    session_server: SessionServer,
     runners: Vec<Runner>,
 }
 
 impl ConfigBuilder {
-    // pub fn with_global_section(mut self, global_section: GlobalSection) -> Self {
-    //     self.global_section = global_section;
-    //     self
-    // }
-
     pub fn with_runners(mut self, runners: Vec<Runner>) -> Self {
         self.runners = runners;
         self
     }
 
-    pub fn finish(self) -> Config {
+    pub fn build(self) -> Config {
         Config {
-            global_section: self.global_section,
+            global: self.global,
+            session_server: self.session_server,
             runners: self.runners,
         }
     }

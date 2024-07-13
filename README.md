@@ -35,7 +35,7 @@ We don't recommend you do (just yet). If you insist: use the Docker container we
 sure it has access to the GitLab Runner configuration file. You do so by passing the path to it via
 the `CONFIG_PATH` environment variable.
 
-If you want to persist the SQLite database (e.g. because you want your rnuner setup to survive
+If you want to persist the SQLite database (e.g. because you want your runner setup to survive
 reboots, or because you're running several replicas of `runrs` for some reason), you can pass it any
 URL that SQLite would understand - most commonly a path to a file on disk - via the `DATABASE_URL`
 environment variable.
@@ -86,6 +86,23 @@ That's it. Make a PR with your changes and we'll talk about them.
 
 This is an open source project, so there isn't support per se. If you open an issue in the
 repository, we'll try and help you, but no promises.
+
+
+## License
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+  http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the
+work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
+additional terms or conditions.
 
 ---
 
