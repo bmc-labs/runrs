@@ -41,6 +41,7 @@ pub struct GitLabRunner {
     /// from the set `[0-9a-f_]`.
     #[schema(value_type = String, example = "glrt-0123456789_abcdefXYZ")]
     token: RunnerToken,
+    #[serde(default = "DateTime::now")]
     #[schema(value_type = String, format = DateTime, example = "2023-08-23T23:23:23Z")]
     token_obtained_at: DateTime,
     /// Docker image to be used
