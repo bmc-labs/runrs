@@ -47,7 +47,7 @@ pub struct Docker {
     pub memory_reservation: Option<String>,
     pub network_mode: Option<String>,
     pub network_mtu: u32, // written in cli runner creation, not in gitlab runner docs
-    pub mac_adress: Option<String>,
+    pub mac_address: Option<String>,
     pub oom_kill_disable: bool, // written in cli runner creation
     pub oom_score_adjust: Option<i32>,
     pub privileged: bool, // written in cli runner creation
@@ -106,7 +106,7 @@ impl Default for Docker {
             memory_reservation: None,
             network_mode: None,
             network_mtu: 0,
-            mac_adress: None,
+            mac_address: None,
             oom_kill_disable: false,
             oom_score_adjust: None,
             privileged: false,
