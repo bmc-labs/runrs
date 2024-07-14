@@ -5,7 +5,7 @@ members = [".", "glrcfg"]
 description = "A microservice to manage GitLab Runners in Docker via REST"
 readme = "README.md"
 
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 
 license = "Apache-2.0"
@@ -57,7 +57,13 @@ mime = "0.3.17"
 names = { version = "0.14.0", default-features = false }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
-sqlx = { version = "0.7.3", features = ["runtime-tokio", "sqlite", "migrate"] }
+sqlx = { version = "0.7.3", features = [
+    "runtime-tokio",
+    "sqlite",
+    "migrate",
+    "chrono",
+    "uuid",
+] }
 thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["full"] }
 toml = "0.8.12"
@@ -71,6 +77,7 @@ tracing-subscriber = { version = "0.3.18", features = [
 tracing-test = "0.2.4"
 utoipa = { version = "4.2.0", features = ["axum_extras", "url"] }
 utoipa-swagger-ui = { version = "6.0.0", features = ["axum"] }
+uuid = { version = "1.8.0", features = ["v4", "serde"] }
 
 [dev-dependencies]
 http-body-util = "0.1.0"

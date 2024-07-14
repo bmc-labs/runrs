@@ -5,6 +5,7 @@ use glrcfg::runner::{DateTime, Docker, Executor, Runner, RunnerToken, Url};
 use names::{Generator, Name};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
+use uuid::Uuid;
 
 fn default_name() -> String {
     let mut generator = Generator::with_naming(Name::Numbered);
@@ -27,8 +28,10 @@ fn default_name() -> String {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Schema, ToSchema, IntoParams)]
 #[table(schema = "public", name = "gitlab_runners")]
 pub struct GitLabRunner {
-    /// Unique ID of the runner within the GitLab instance
     #[sql(pk)]
+    #[serde(default = "Uuid::new_v4")]
+    uuid: Uuid,
+    /// ID of the runner within the GitLab instance; unique for that GitLab instance
     id: u32,
     /// Runner name (default: Docker-style random name)
     #[serde(alias = "description", default = "default_name")]
@@ -77,6 +80,7 @@ impl From<GitLabRunner> for Runner {
 impl GitLabRunner {
     pub fn for_testing() -> Self {
         GitLabRunner {
+            uuid: Uuid::new_v4(),
             id: 42,
             name: "Knows the meaning of life".to_string(),
             url: Url::parse("https://gitlab.your-company.com").expect("given string is a URL"),
@@ -88,8 +92,8 @@ impl GitLabRunner {
         }
     }
 
-    pub fn id(&self) -> u32 {
-        self.id
+    pub fn uuid(&self) -> &Uuid {
+        &self.uuid
     }
 
     pub fn set_url(&mut self, url: &str) {
@@ -111,16 +115,16 @@ mod tests {
         let mut runner = GitLabRunner::for_testing();
 
         assert!(matches!(
-            GitLabRunner::read(&pool, &runner.id).await,
+            GitLabRunner::read(&pool, &runner.uuid).await,
             Err(Error::Query(query::QueryError::NotFound(
                 sqlx::Error::RowNotFound,
             )))
         ));
         assert_eq!(runner.create(&pool).await?.rows_affected(), 1);
-        assert_eq!(GitLabRunner::read(&pool, &runner.id).await?, runner);
+        assert_eq!(GitLabRunner::read(&pool, &runner.uuid).await?, runner);
         assert_eq!(runner.delete(&pool).await?.rows_affected(), 1);
         assert!(matches!(
-            GitLabRunner::read(&pool, &runner.id).await,
+            GitLabRunner::read(&pool, &runner.uuid).await,
             Err(Error::Query(query::QueryError::NotFound(
                 sqlx::Error::RowNotFound,
             )))
@@ -137,7 +141,7 @@ mod tests {
 
         runner.url = "https://gitlab.bmc-labs.com".parse()?;
         assert_eq!(runner.upsert(&pool).await?.rows_affected(), 1);
-        assert_eq!(GitLabRunner::read(&pool, &runner.id).await?, runner);
+        assert_eq!(GitLabRunner::read(&pool, &runner.uuid).await?, runner);
 
         Ok(())
     }

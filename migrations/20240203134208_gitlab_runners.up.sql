@@ -1,7 +1,8 @@
 -- Copyright 2024 bmc::labs GmbH. All rights reserved.
 
 CREATE TABLE IF NOT EXISTS gitlab_runners (
-    id                INTEGER PRIMARY KEY,
+    uuid              BLOB    PRIMARY KEY,
+    id                INTEGER NOT NULL,
     name              TEXT    NOT NULL,
     url               TEXT    NOT NULL,
     token             TEXT    NOT NULL,
