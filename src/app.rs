@@ -18,7 +18,7 @@ use crate::{
     models,
 };
 
-pub const DEFAULT_DATABASE_URL: &str = "sqlite::memory:";
+pub const DEFAULT_DATABASE_URL: &str = "/tmp/runrs.db";
 pub const DEFAULT_CONFIG_PATH: &str = "/tmp/gitlab-runner/config.toml";
 
 #[derive(OpenApi)]
@@ -98,12 +98,34 @@ impl AppState {
 }
 
 async fn init_database() -> miette::Result<atmosphere::Pool> {
-    let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-        tracing::warn!("DATABASE_URL not set, using in-memory database");
-        DEFAULT_DATABASE_URL.to_string()
-    });
+    let database_url = std::env::var("DATABASE_URL").map_or_else(
+        |_| {
+            tracing::warn!("DATABASE_URL not set, using default URL '{DEFAULT_DATABASE_URL}'");
+            PathBuf::from(DEFAULT_DATABASE_URL)
+        },
+        PathBuf::from,
+    );
 
-    let pool = match atmosphere::Pool::connect(&database_url).await {
+    if !database_url.exists() {
+        tracing::warn!(?database_url, "Database file not found, creating it");
+
+        if let Some(base_path) = database_url.parent() {
+            if !base_path.exists() {
+                tracing::warn!(?base_path, "Database directory not found, creating it");
+                std::fs::create_dir_all(base_path).into_diagnostic()?;
+            }
+        }
+
+        File::create(&database_url).into_diagnostic()?;
+    }
+
+    let pool = match atmosphere::Pool::connect(
+        database_url
+            .to_str()
+            .ok_or_else(|| miette::miette!("Invalid database URL"))?,
+    )
+    .await
+    {
         Ok(pool) => pool,
         Err(err) => {
             tracing::error!(%err, "Failed to connect to database");
