@@ -30,6 +30,7 @@ fn default_name() -> String {
 pub struct GitLabRunner {
     #[sql(pk)]
     #[serde(default = "Uuid::new_v4")]
+    #[schema(value_type = String, format = Uuid, example = "be924fdd-fb28-468c-8c70-1f0ed3af4485")]
     uuid: Uuid,
     /// ID of the runner within the GitLab instance; unique for that GitLab instance
     id: u32,
