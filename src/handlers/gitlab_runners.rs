@@ -7,6 +7,7 @@ use axum::{
     response::{IntoResponse, Response, Result},
     Json,
 };
+use uuid::Uuid;
 
 use crate::{
     app::AppState,
@@ -80,11 +81,13 @@ pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Result<Respo
 #[tracing::instrument(skip(pool))]
 pub async fn read(
     State(AppState { pool, .. }): State<AppState>,
-    Path(id): Path<u32>,
+    Path(uuid): Path<Uuid>,
 ) -> Result<Response> {
     tracing::debug!("reading runner from database");
 
-    let runner = GitLabRunner::read(&pool, &id).await.map_err(Error::from)?;
+    let runner = GitLabRunner::read(&pool, &uuid)
+        .await
+        .map_err(Error::from)?;
     tracing::debug!("runner found in database");
 
     Ok((StatusCode::OK, Json(runner)).into_response())
@@ -111,12 +114,14 @@ pub async fn update(
     State(AppState {
         pool, config_path, ..
     }): State<AppState>,
-    Path(id): Path<u32>,
+    Path(uuid): Path<Uuid>,
     Json(mut updated_runner): Json<GitLabRunner>,
 ) -> Result<Response> {
     tracing::debug!(?updated_runner, "updating runner");
 
-    let runner = GitLabRunner::read(&pool, &id).await.map_err(Error::from)?;
+    let runner = GitLabRunner::read(&pool, &uuid)
+        .await
+        .map_err(Error::from)?;
     tracing::debug!("runner found in database");
 
     if !updated_runner.compatible_with(&runner) {
@@ -151,11 +156,13 @@ pub async fn delete(
     State(AppState {
         pool, config_path, ..
     }): State<AppState>,
-    Path(id): Path<u32>,
+    Path(uuid): Path<Uuid>,
 ) -> Result<Response> {
     tracing::debug!("deleting runner");
 
-    let mut runner = GitLabRunner::read(&pool, &id).await.map_err(Error::from)?;
+    let mut runner = GitLabRunner::read(&pool, &uuid)
+        .await
+        .map_err(Error::from)?;
     tracing::debug!("runner found in database");
 
     runner.delete(&pool).await.map_err(Error::from)?;
@@ -198,7 +205,7 @@ mod tests {
         let runner = GitLabRunner::for_testing();
         let request = Request::builder()
             .method(http::Method::GET)
-            .uri(&format!("/gitlab-runners/{}", runner.id()))
+            .uri(&format!("/gitlab-runners/{}", runner.uuid()))
             .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
             .body(String::new())?;
 
@@ -232,7 +239,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::DELETE)
-                    .uri(&format!("/gitlab-runners/{}", runner.id()))
+                    .uri(&format!("/gitlab-runners/{}", runner.uuid()))
                     .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
                     .body(Body::empty())?,
             )
@@ -267,7 +274,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::PUT)
-                    .uri(&format!("/gitlab-runners/{}", runner.id()))
+                    .uri(&format!("/gitlab-runners/{}", runner.uuid()))
                     .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
                     .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
                     .body(Body::from(serde_json::to_string(&runner)?))?,
@@ -275,7 +282,7 @@ mod tests {
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let runner_from_db = GitLabRunner::read(&app_state.pool, &runner.id()).await?;
+        let runner_from_db = GitLabRunner::read(&app_state.pool, runner.uuid()).await?;
         assert_eq!(runner_from_db, runner);
 
         std::fs::remove_file(&app_state.config_path)?;

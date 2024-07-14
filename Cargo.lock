@@ -1608,7 +1608,7 @@ dependencies = [
 
 [[package]]
 name = "runrs"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "atmosphere",
  "axum",
@@ -2012,6 +2012,7 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
+ "uuid",
  "webpki-roots",
 ]
 
@@ -2094,6 +2095,7 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -2133,6 +2135,7 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -2158,6 +2161,7 @@ dependencies = [
  "tracing",
  "url",
  "urlencoding",
+ "uuid",
 ]
 
 [[package]]
@@ -2732,6 +2736,7 @@ checksum = "a183cf7feeba97b4dd1c0d46788634f6221d87fa961b305bed08c851829efcc0"
 dependencies = [
  "getrandom",
  "rand",
+ "serde",
 ]
 
 [[package]]
