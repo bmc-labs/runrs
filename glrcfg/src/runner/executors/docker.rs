@@ -18,13 +18,13 @@ pub struct Docker {
     pub allowed_pull_policies: Vec<String>,
     pub allowed_services: Vec<String>,
     pub allowed_privileged_services: Vec<String>,
-    pub cache_dir: String,
+    pub cache_dir: Option<String>,
     pub cap_add: Vec<String>,
     pub cap_drop: Vec<String>,
-    pub cpuset_cpus: String,
-    pub cpuset_mems: String,
+    pub cpuset_cpus: Option<String>,
+    pub cpuset_mems: Option<String>,
     pub cpu_shares: u32,
-    pub cpus: String,
+    pub cpus: Option<String>,
     pub devices: Vec<String>,
     pub device_cgroup_rules: Vec<String>, // https://docs.docker.com/compose/compose-file/05-services/#device_cgroup_rules
     pub disable_cache: bool,              // written in cli runner creation
@@ -42,9 +42,9 @@ pub struct Docker {
     pub hostname: Option<String>,
     pub image: String, // written in cli runner creation
     pub links: Vec<String>,
-    pub memory: String,
-    pub memory_swap: String,
-    pub memory_reservation: String,
+    pub memory: Option<String>,
+    pub memory_swap: Option<String>,
+    pub memory_reservation: Option<String>,
     pub network_mode: Option<String>,
     pub network_mtu: u32, // written in cli runner creation, not in gitlab runner docs
     pub mac_adress: Option<String>,
@@ -55,7 +55,7 @@ pub struct Docker {
     pub runtime: Option<String>,
     pub isolation: Option<String>,
     pub security_opt: Vec<String>, // todo: serialization needs to use a : instead of the , between elements
-    pub shm_size: u32,
+    pub shm_size: Option<u32>,
     pub smg_size: u32, // written in cli runner creation, not in gitlub runner docs
     pub sysctls: Option<Sysctls>, // todo: Implement Sysctls
     pub tls_cert_path: Option<String>,
@@ -78,13 +78,13 @@ impl Default for Docker {
             allowed_pull_policies: Vec::new(),
             allowed_services: Vec::new(),
             allowed_privileged_services: Vec::new(),
-            cache_dir: "".to_string(), // value from example
+            cache_dir: None,
             cap_add: Vec::new(),
             cap_drop: Vec::new(),
-            cpuset_cpus: "0,1".to_string(), // value from example
-            cpuset_mems: "0,1".to_string(), // value from example
-            cpu_shares: 1024,
-            cpus: "2".to_string(), // value from example
+            cpuset_cpus: None,
+            cpuset_mems: None,
+            cpu_shares: 1024, // default value as read in the gitlab docs
+            cpus: None,
             devices: Vec::new(),
             device_cgroup_rules: Vec::new(),
             disable_cache: false,
@@ -101,9 +101,9 @@ impl Default for Docker {
             hostname: None,
             image: "alpine:latest".to_string(),
             links: Vec::new(),
-            memory: "128m".to_string(),            // value from example
-            memory_swap: "256m".to_string(),       // value from example
-            memory_reservation: "64m".to_string(), // value from example
+            memory: None,
+            memory_swap: None,
+            memory_reservation: None,
             network_mode: None,
             network_mtu: 0,
             mac_adress: None,
@@ -114,17 +114,17 @@ impl Default for Docker {
             runtime: None,
             isolation: None,
             security_opt: Vec::new(),
-            shm_size: 300000, // value from example
+            shm_size: None,
             smg_size: 0,
             sysctls: None,
             tls_cert_path: None,
-            tls_verify: false,
+            tls_verify: false, // default value as read in the gitlab docs
             user: None,
             userns_mode: None,
             volumes: stringvec!["/cache"],
             volumes_from: Vec::new(),
             volume_driver: None,
-            wait_for_service_timeout: 30,
+            wait_for_service_timeout: 30, // default value as read in the gitlab docs
             container_labels: Vec::new(),
             services: Vec::new(),
         }
