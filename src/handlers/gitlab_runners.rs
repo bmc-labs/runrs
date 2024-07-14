@@ -68,9 +68,9 @@ pub async fn list(State(AppState { pool, .. }): State<AppState>) -> Result<Respo
 
 #[utoipa::path(
     get,
-    path = "/gitlab-runners/{id}",
+    path = "/gitlab-runners/{uuid}",
     params(
-        ("id" = u32, Path, description = "GitLabRunner ID")
+        ("uuid" = Uuid, Path, description = "GitLabRunner UUID")
     ),
     responses(
         (status = StatusCode::OK, description = "Read all GitLabRunners", body = GitLabRunner),
@@ -95,9 +95,9 @@ pub async fn read(
 
 #[utoipa::path(
     put,
-    path = "/gitlab-runners/{id}",
+    path = "/gitlab-runners/{uuid}",
     params(
-        ("id" = u32, Path, description = "GitLabRunner ID")
+        ("uuid" = Uuid, Path, description = "GitLab Runner UUID")
     ),
     request_body(
         content = GitLabRunner, description = "GitLabRunner to update", content_type = "application/json"
@@ -141,9 +141,9 @@ pub async fn update(
 
 #[utoipa::path(
     delete,
-    path = "/gitlab-runners/{id}",
+    path = "/gitlab-runners/{uuid}",
     params(
-        ("id" = u32, Path, description = "GitLabRunner ID")
+        ("uuid" = Uuid, Path, description = "GitLabRunner UUID")
     ),
     responses(
         (status = StatusCode::OK, description = "Deleted GitLabRunner", body = GitLabRunner),
