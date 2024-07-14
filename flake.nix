@@ -22,7 +22,14 @@
       flake-utils,
       ...
     }:
-    flake-utils.lib.eachDefaultSystem (
+    let
+      supportedSystems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-linux"
+      ];
+    in
+    flake-utils.lib.eachSystem supportedSystems (
       system:
       let
         overlays = [ (import rust-overlay) ];
@@ -59,6 +66,8 @@
             # This switches rustfmt to the nightly channel.
             rust-bin.nightly.latest.rustfmt
           ];
+
+          cargoTestExtraArgs = "--workspace";
         };
 
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -75,7 +84,7 @@
           }
         );
 
-        runrs-nextest = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
+        runrs-test = craneLib.cargoTest (commonArgs // { inherit cargoArtifacts; });
 
         runrs-docker-image = pkgs.dockerTools.buildLayeredImage {
           name = "ghcr.io/bmc-labs/runrs";
@@ -124,7 +133,7 @@
             runrs
             runrs-fmt
             runrs-clippy
-            runrs-nextest
+            runrs-test
             ;
         };
 
