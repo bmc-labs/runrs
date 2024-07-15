@@ -39,7 +39,7 @@ pub struct Docker {
     pub devices: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub device_cgroup_rules: Vec<String>, // https://docs.docker.com/compose/compose-file/05-services/#device_cgroup_rules
-    pub disable_cache: bool,              // written in cli runner creation
+    pub disable_cache: bool,                // written in cli runner creation
     pub disable_entrypoint_overwrite: bool, // written in cli runner creation
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub dns: Vec<String>,
