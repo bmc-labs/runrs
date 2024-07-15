@@ -1,5 +1,5 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 
 macro_rules! stringvec {
     ($($x:expr),*) => (vec![$($x.to_string()),*]);
@@ -86,7 +86,7 @@ pub struct Docker {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub isolation: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub security_opt: Vec<String>, // todo: serialization needs to use a : instead of the , between elements
+    pub security_opt: Vec<SecurityOpt>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shm_size: Option<u32>,
     pub smg_size: u32, // written in cli runner creation, not in gitlub runner docs
@@ -193,4 +193,20 @@ pub struct Services {
     pub command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub environment: Option<Vec<String>>,
+}
+
+#[derive(Debug)]
+pub struct SecurityOpt {
+    pub key: String,
+    pub value: String,
+}
+
+impl Serialize for SecurityOpt {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = format!("{}:{}", self.key, self.value);
+        serializer.serialize_str(&s)
+    }
 }
