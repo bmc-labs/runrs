@@ -79,8 +79,8 @@ pub struct Docker {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub oom_score_adjust: Option<i32>,
     pub privileged: bool, // written in cli runner creation
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub pull_policy: Vec<String>,
+    #[serde(skip_serializing_if = "is_pull_policy_empty")]
+    pub pull_policy: PullPolicy,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runtime: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -152,7 +152,7 @@ impl Default for Docker {
             oom_kill_disable: false,
             oom_score_adjust: None,
             privileged: false,
-            pull_policy: vec!["always".to_string()], // Default would be "always" as string. Multiple policies are defined as list.
+            pull_policy: PullPolicy::Single(Some("always".to_string())), // default value as read in the gitlab docs
             runtime: None,
             isolation: None,
             security_opt: Vec::new(),
@@ -195,6 +195,37 @@ pub struct Services {
     pub environment: Option<Vec<String>>,
 }
 
+/// The image pull policy: `never`, `if-not-present` or `always` (default).
+///
+/// View details in the [pull policies documentation](https://docs.gitlab.com/runner/executors/docker.html#configure-how-runners-pull-images).
+/// You can also add [multiple pull policies](https://docs.gitlab.com/runner/executors/docker.html#set-multiple-pull-policies), [retry a failed pull](https://docs.gitlab.com/runner/executors/docker.html#retry-a-failed-pull), or [restrict pull policies](https://docs.gitlab.com/runner/executors/docker.html#allow-docker-pull-policies).
+#[derive(Debug)]
+pub enum PullPolicy {
+    Single(Option<String>),
+    Multiple(Vec<String>),
+}
+
+impl Serialize for PullPolicy {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            PullPolicy::Single(Some(s)) => serializer.serialize_some(s),
+            PullPolicy::Single(None) => serializer.serialize_none(),
+            PullPolicy::Multiple(vec) => vec.serialize(serializer),
+        }
+    }
+}
+
+fn is_pull_policy_empty(pull_policy: &PullPolicy) -> bool {
+    match pull_policy {
+        PullPolicy::Single(None) => true,
+        PullPolicy::Multiple(vec) => vec.is_empty(),
+        _ => false,
+    }
+}
+
 #[derive(Debug)]
 pub struct SecurityOpt {
     pub key: String,
@@ -213,10 +244,10 @@ impl Serialize for SecurityOpt {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use pretty_assertions::assert_eq;
+    use serde_json;
 
-    use super::SecurityOpt;
+    use super::{PullPolicy, SecurityOpt};
 
     #[test]
     fn security_opt_serialization() {
@@ -227,5 +258,33 @@ mod test {
 
         let serialized = serde_json::to_string(&opt).unwrap();
         assert_eq!(serialized, "\"warbl:garbl\"");
+    }
+
+    #[test]
+    fn test_pull_policy_single_some() {
+        let policy = PullPolicy::Single(Some("single_policy".to_string()));
+        let serialized = serde_json::to_string(&policy).unwrap();
+        assert_eq!(serialized, "\"single_policy\"");
+    }
+
+    #[test]
+    fn test_pull_policy_single_none() {
+        let policy = PullPolicy::Single(None);
+        let serialized = serde_json::to_string(&policy).unwrap();
+        assert_eq!(serialized, "null");
+    }
+
+    #[test]
+    fn test_pull_policy_multiple() {
+        let policy = PullPolicy::Multiple(vec!["policy1".to_string(), "policy2".to_string()]);
+        let serialized = serde_json::to_string(&policy).unwrap();
+        assert_eq!(serialized, "[\"policy1\",\"policy2\"]");
+    }
+
+    #[test]
+    fn test_pull_policy_multiple_empty() {
+        let policy = PullPolicy::Multiple(Vec::new());
+        let serialized = serde_json::to_string(&policy).unwrap();
+        assert_eq!(serialized, "[]");
     }
 }
