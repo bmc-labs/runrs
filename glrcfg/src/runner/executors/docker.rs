@@ -210,3 +210,22 @@ impl Serialize for SecurityOpt {
         serializer.serialize_str(&s)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use serde_json;
+    use pretty_assertions::assert_eq;
+
+    use super::SecurityOpt;
+
+    #[test]
+    fn security_opt_serialization() {
+        let opt = SecurityOpt {
+            key: "warbl".to_string(),
+            value: "garbl".to_string(),
+        };
+
+        let serialized = serde_json::to_string(&opt).unwrap();
+        assert_eq!(serialized, "\"warbl:garbl\"");
+    }
+}
