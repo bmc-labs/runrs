@@ -14,59 +14,101 @@ macro_rules! stringvec {
 pub struct Docker {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_images: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_privileged_images: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_pull_policies: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_services: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_privileged_services: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_dir: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub cap_add: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub cap_drop: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cpuset_cpus: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cpuset_mems: Option<String>,
     pub cpu_shares: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cpus: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub devices: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub device_cgroup_rules: Vec<String>, // https://docs.docker.com/compose/compose-file/05-services/#device_cgroup_rules
     pub disable_cache: bool,              // written in cli runner creation
     pub disable_entrypoint_overwrite: bool, // written in cli runner creation
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub dns: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub dns_search: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub extra_hosts: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gpus: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub group_add: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub helper_image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub helper_image_flavor: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub helper_image_autoset_arch_and_os: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub host: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hostname: Option<String>,
     pub image: String, // written in cli runner creation
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub links: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub memory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub memory_swap: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub memory_reservation: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub network_mode: Option<String>,
     pub network_mtu: u32, // written in cli runner creation, not in gitlab runner docs
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub mac_address: Option<String>,
     pub oom_kill_disable: bool, // written in cli runner creation
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub oom_score_adjust: Option<i32>,
     pub privileged: bool, // written in cli runner creation
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub pull_policy: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub runtime: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub isolation: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub security_opt: Vec<String>, // todo: serialization needs to use a : instead of the , between elements
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub shm_size: Option<u32>,
     pub smg_size: u32, // written in cli runner creation, not in gitlub runner docs
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sysctls: Option<Sysctls>, // todo: Implement Sysctls
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tls_cert_path: Option<String>,
     pub tls_verify: bool, // written in cli runner creation
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub userns_mode: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub volumes: Vec<String>, // written in cli runner creation
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub volumes_from: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub volume_driver: Option<String>,
     pub wait_for_service_timeout: u32,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub container_labels: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub services: Vec<Services>,
 }
 
@@ -145,7 +187,10 @@ pub struct Services {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alias: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub entrypoint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub environment: Option<Vec<String>>,
 }
