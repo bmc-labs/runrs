@@ -55,7 +55,7 @@ pub struct GitLabRunner {
 
 impl GitLabRunner {
     pub fn compatible_with(&self, other: &Self) -> bool {
-        self.id == other.id
+        self.uuid == other.uuid
     }
 }
 
