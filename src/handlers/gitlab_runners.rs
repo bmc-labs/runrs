@@ -136,7 +136,7 @@ pub async fn update(
         .map_err(Error::from)?;
     tracing::debug!("runners config written to disk");
 
-    Ok((StatusCode::OK, Json(runner)).into_response())
+    Ok((StatusCode::OK, Json(updated_runner)).into_response())
 }
 
 #[utoipa::path(
@@ -180,7 +180,7 @@ pub async fn delete(
 mod tests {
     use atmosphere::{Create, Read};
     use axum::{
-        body::Body,
+        body::{to_bytes, Body},
         http::{self, Request, StatusCode},
     };
     use pretty_assertions::assert_eq;
@@ -281,6 +281,10 @@ mod tests {
             )
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
+
+        let runner_from_response: GitLabRunner =
+            serde_json::from_slice(&to_bytes(response.into_body(), usize::MAX).await?)?;
+        assert_eq!(runner_from_response, runner);
 
         let runner_from_db = GitLabRunner::read(&app_state.pool, runner.uuid()).await?;
         assert_eq!(runner_from_db, runner);
