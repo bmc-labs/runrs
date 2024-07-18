@@ -1,0 +1,14 @@
+# Development Setup: in the root directory,
+#
+# - run `docker compose up`
+# - run `cargo run`
+#
+# and re-run `cargo run` whenever you've made changes.
+
+services:
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    restart: always
+    volumes:
+      - ./tmp:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock

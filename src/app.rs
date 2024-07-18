@@ -18,8 +18,8 @@ use crate::{
     models,
 };
 
-pub const DEFAULT_DATABASE_URL: &str = "/tmp/runrs.db";
-pub const DEFAULT_CONFIG_PATH: &str = "/tmp/gitlab-runner/config.toml";
+pub const DEFAULT_DATABASE_URL: &str = "/etc/runrs/database.sqlite";
+pub const DEFAULT_CONFIG_PATH: &str = "/etc/gitlab-runner/config.toml";
 
 #[derive(OpenApi)]
 #[openapi(

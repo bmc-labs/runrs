@@ -140,3 +140,6 @@ $RECYCLE.BIN/
 # nix
 .direnv
 result
+
+# /tmp is used as a temporary directory during development
+/tmp/*
