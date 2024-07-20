@@ -6,7 +6,7 @@ mod runner_token;
 mod url;
 
 pub use date_time::DateTime;
-pub use executors::{Docker, Executor, PullPolicy, SecurityOpt, Services, Sysctls};
+pub use executors::{Docker, Executor, OptionSet, SecurityOpt, Services, Sysctls};
 pub use runner_token::{RunnerToken, RunnerTokenParseError};
 use serde::Serialize;
 pub use url::Url;

@@ -11,7 +11,7 @@ use url::Url;
 static GOLANG_DURATION_REGEX_STR: &str = r"([+-]?(\d+(h|m|s|ms|us|µs|ns))+|0)";
 static GOLANG_DURATION_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!(r"^{GOLANG_DURATION_REGEX_STR}$"))
-        .expect("unable to instantiate GOLANG_DURATION_REGEX from given static string")
+        .expect("instantiating GOLANG_DURATION_REGEX from given static string must not fail")
 });
 
 /// Defines the log level. Options are `debug`, `info`, `warn`, `error`, `fatal`, and `panic`. This
@@ -59,6 +59,7 @@ pub struct GolangDurationParseError;
 /// # use glrcfg::GolangDuration;
 /// let duration = GolangDuration::parse("15m").unwrap();
 /// assert_eq!(duration.as_str(), "15m");
+/// assert!(GolangDuration::parse("42hours").is_err());
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(transparent)]
@@ -163,14 +164,14 @@ mod test {
     }
 
     #[proptest]
-    fn parse_valid_golang_durations(#[strategy(GOLANG_DURATION_REGEX_STR)] token: String) {
-        assert_eq!(token, GolangDuration::parse(&token).unwrap().as_str());
+    fn parse_valid_golang_durations(#[strategy(GOLANG_DURATION_REGEX_STR)] duration: String) {
+        assert_eq!(duration, GolangDuration::parse(&duration).unwrap().as_str());
     }
 
     #[proptest]
     fn parse_invalid_golang_durations(
-        #[filter(|t| !GOLANG_DURATION_REGEX.is_match(t))] token: String,
+        #[filter(|s| !GOLANG_DURATION_REGEX.is_match(s))] duration: String,
     ) {
-        assert!(GolangDuration::parse(token).is_err());
+        assert!(GolangDuration::parse(duration).is_err());
     }
 }

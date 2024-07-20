@@ -1,5 +1,18 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
-use serde::{Serialize, Serializer};
+
+use std::{fmt, str::FromStr};
+
+use indexmap::IndexSet;
+use once_cell::sync::Lazy;
+use regex::Regex;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+static SECURITY_OPT_REGEX_STR: &str = r"[a-zA-Z]\w*:\w+";
+static SECURITY_OPT_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!("^{SECURITY_OPT_REGEX_STR}$"))
+        .expect("instantiating SECURITY_OPT_REGEX from given static string must not fail")
+});
 
 macro_rules! stringvec {
     ($($x:expr),*) => (vec![$($x.to_string()),*]);
@@ -7,6 +20,15 @@ macro_rules! stringvec {
 
 /// The following settings define the Docker container parameters. Docker-in-Docker as a service,
 /// or any container runtime configured inside a job, does not inherit these parameters.
+///
+/// The, let's call it, _specialty_ here is that the GitLab documentation does not specify a
+/// default value for all these parameters, only for some - and for a separate set of them, which
+/// is partially overlapping with the set for which defaults are specified in the docs, it produces
+/// default values when creating a runner via the `gitlab-runner` CLI. Our default implementation
+/// is to produce the same output as the `gitlab-runner` CLI, plus default values where they are
+/// specified. The docs for each field tell you which are set and from where we determine the
+/// default value; all those without this information in their docs default to the Rust defaults
+/// (`None` for [`Option`], etc.) and don't show up by default when serializing a config file.
 ///
 /// Further documentation found in [the GitLab
 /// docs](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersdocker-section).
@@ -16,8 +38,8 @@ pub struct Docker {
     pub allowed_images: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_privileged_images: Vec<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub allowed_pull_policies: Vec<String>,
+    #[serde(skip_serializing_if = "OptionSet::is_none")]
+    pub allowed_pull_policies: OptionSet<PullPolicy>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_services: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -32,15 +54,19 @@ pub struct Docker {
     pub cpuset_cpus: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cpuset_mems: Option<String>,
+    /// Default determined from GitLab documentation.
     pub cpu_shares: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cpus: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub devices: Vec<String>,
+    /// For more, see: https://docs.docker.com/compose/compose-file/05-services/#device_cgroup_rules
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub device_cgroup_rules: Vec<String>, // https://docs.docker.com/compose/compose-file/05-services/#device_cgroup_rules
-    pub disable_cache: bool,                // written in cli runner creation
-    pub disable_entrypoint_overwrite: bool, // written in cli runner creation
+    pub device_cgroup_rules: Vec<String>,
+    /// Default determined from `gitlab-runner` CLI runner creation.
+    pub disable_cache: bool,
+    /// Default determined from `gitlab-runner` CLI runner creation.
+    pub disable_entrypoint_overwrite: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub dns: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -61,7 +87,8 @@ pub struct Docker {
     pub host: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hostname: Option<String>,
-    pub image: String, // written in cli runner creation
+    /// Default determined from `gitlab-runner` CLI runner creation.
+    pub image: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub links: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -72,15 +99,20 @@ pub struct Docker {
     pub memory_reservation: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub network_mode: Option<String>,
-    pub network_mtu: u32, // written in cli runner creation, not in gitlab runner docs
+    /// Default determined from `gitlab-runner` CLI runner creation; this field is not documented
+    /// in the GitLab docs at all, it _only_ shows up when using the `gitlab-runner` CLI.
+    pub network_mtu: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mac_address: Option<String>,
-    pub oom_kill_disable: bool, // written in cli runner creation
+    /// Default determined from `gitlab-runner` CLI runner creation.
+    pub oom_kill_disable: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub oom_score_adjust: Option<i32>,
-    pub privileged: bool, // written in cli runner creation
-    #[serde(skip_serializing_if = "is_pull_policy_empty")]
-    pub pull_policy: PullPolicy,
+    /// Default determined from `gitlab-runner` CLI runner creation.
+    pub privileged: bool,
+    /// Default determined from GitLab documentation.
+    #[serde(skip_serializing_if = "OptionSet::is_none")]
+    pub pull_policy: OptionSet<PullPolicy>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runtime: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -89,22 +121,28 @@ pub struct Docker {
     pub security_opt: Vec<SecurityOpt>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shm_size: Option<u32>,
-    pub smg_size: u32, // written in cli runner creation, not in gitlub runner docs
+    /// Default determined from `gitlab-runner` CLI runner creation; this field is not documented
+    /// in the GitLab docs at all, it _only_ shows up when using the `gitlab-runner` CLI.
+    pub smg_size: u32,
+    // TODO(@fabio): Implement Sysctls
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sysctls: Option<Sysctls>, // todo: Implement Sysctls
+    pub sysctls: Option<Sysctls>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tls_cert_path: Option<String>,
-    pub tls_verify: bool, // written in cli runner creation
+    /// Default determined from `gitlab-runner` CLI runner creation and GitLab documentation.
+    pub tls_verify: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub userns_mode: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub volumes: Vec<String>, // written in cli runner creation
+    /// Default determined from `gitlab-runner` CLI runner creation.
+    pub volumes: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub volumes_from: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub volume_driver: Option<String>,
+    /// Default determined from GitLab documentation.
     pub wait_for_service_timeout: u32,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub container_labels: Vec<String>,
@@ -117,7 +155,7 @@ impl Default for Docker {
         Self {
             allowed_images: Vec::new(),
             allowed_privileged_images: Vec::new(),
-            allowed_pull_policies: Vec::new(),
+            allowed_pull_policies: Vec::new().into(),
             allowed_services: Vec::new(),
             allowed_privileged_services: Vec::new(),
             cache_dir: None,
@@ -125,7 +163,7 @@ impl Default for Docker {
             cap_drop: Vec::new(),
             cpuset_cpus: None,
             cpuset_mems: None,
-            cpu_shares: 1024, // default value as read in the gitlab docs
+            cpu_shares: 1024,
             cpus: None,
             devices: Vec::new(),
             device_cgroup_rules: Vec::new(),
@@ -152,7 +190,7 @@ impl Default for Docker {
             oom_kill_disable: false,
             oom_score_adjust: None,
             privileged: false,
-            pull_policy: PullPolicy::Single(Some("always".to_string())), // default value as read in the gitlab docs
+            pull_policy: OptionSet::Some(PullPolicy::Always),
             runtime: None,
             isolation: None,
             security_opt: Vec::new(),
@@ -160,13 +198,13 @@ impl Default for Docker {
             smg_size: 0,
             sysctls: None,
             tls_cert_path: None,
-            tls_verify: false, // default value as read in the gitlab docs
+            tls_verify: false,
             user: None,
             userns_mode: None,
             volumes: stringvec!["/cache"],
             volumes_from: Vec::new(),
             volume_driver: None,
-            wait_for_service_timeout: 30, // default value as read in the gitlab docs
+            wait_for_service_timeout: 30,
             container_labels: Vec::new(),
             services: Vec::new(),
         }
@@ -197,94 +235,194 @@ pub struct Services {
 
 /// The image pull policy: `never`, `if-not-present` or `always` (default).
 ///
-/// View details in the [pull policies documentation](https://docs.gitlab.com/runner/executors/docker.html#configure-how-runners-pull-images).
-/// You can also add [multiple pull policies](https://docs.gitlab.com/runner/executors/docker.html#set-multiple-pull-policies), [retry a failed pull](https://docs.gitlab.com/runner/executors/docker.html#retry-a-failed-pull), or [restrict pull policies](https://docs.gitlab.com/runner/executors/docker.html#allow-docker-pull-policies).
-#[derive(Debug)]
+/// View details in the [pull policies
+/// documentation](https://docs.gitlab.com/runner/executors/docker.html#configure-how-runners-pull-images).
+///
+/// You can also add [multiple pull
+/// policies](https://docs.gitlab.com/runner/executors/docker.html#set-multiple-pull-policies),
+/// [retry a failed
+/// pull](https://docs.gitlab.com/runner/executors/docker.html#retry-a-failed-pull), or [restrict
+/// pull
+/// policies](https://docs.gitlab.com/runner/executors/docker.html#allow-docker-pull-policies).
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all(serialize = "kebab-case"))]
 pub enum PullPolicy {
-    Single(Option<String>),
-    Multiple(Vec<String>),
+    Always,
+    IfNotPresent,
+    Never,
 }
 
-impl Serialize for PullPolicy {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+/// An [`Option`], with in addition to `None` and `Some(T)`, there is `Set(HashSet<T>)`.
+///
+/// As with a regular [`Option`], the default is `None`. There is also an [`OptionSet::is_none()`]
+/// method. Other than that, the API of `OptionSet` is clearly much more limited than that of
+/// [`Option`], since we only implement what we need for the library.
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum OptionSet<T> {
+    None,
+    Some(T),
+    Set(IndexSet<T>),
+}
+
+impl<T> OptionSet<T> {
+    pub fn is_none(&self) -> bool {
+        matches!(self, Self::None)
+    }
+}
+
+impl<T> Default for OptionSet<T> {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl From<PullPolicy> for OptionSet<PullPolicy> {
+    fn from(pull_policy: PullPolicy) -> Self {
+        Self::Some(pull_policy)
+    }
+}
+
+impl From<Vec<PullPolicy>> for OptionSet<PullPolicy> {
+    fn from(pull_policies: Vec<PullPolicy>) -> Self {
+        let pull_policies = pull_policies.into_iter().collect();
+        Self::Set(pull_policies)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Error)]
+#[error("invalid security option; must be a key:value pair")]
+pub struct SecurityOptParseError;
+
+/// Security option (`–security-opt` in `docker run`). Must be a `key:value` pair. Keys must start
+/// with a letter.
+///
+/// # Example
+///
+/// ```rust
+/// # use glrcfg::runner::SecurityOpt;
+/// let security_opt = SecurityOpt::parse("key:value").unwrap();
+/// assert_eq!(security_opt.as_str(), "key:value");
+/// assert!(SecurityOpt::parse("42key:value").is_err());
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SecurityOpt(String);
+
+impl SecurityOpt {
+    /// Parses a security option from an `Into<String>`, e.g. a `&str` or `String`.
+    pub fn parse<S>(opt: S) -> Result<Self, SecurityOptParseError>
     where
-        S: Serializer,
+        S: Into<String>,
     {
-        match self {
-            PullPolicy::Single(Some(s)) => serializer.serialize_some(s),
-            PullPolicy::Single(None) => serializer.serialize_none(),
-            PullPolicy::Multiple(vec) => vec.serialize(serializer),
+        let opt = opt.into();
+
+        if !SECURITY_OPT_REGEX.is_match(&opt) {
+            #[cfg(feature = "tracing")]
+            tracing::error!("invalid security option: {opt}");
+            return Err(SecurityOptParseError);
         }
+
+        Ok(Self(opt))
+    }
+
+    /// Returns the security option as a string slice.
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 }
 
-fn is_pull_policy_empty(pull_policy: &PullPolicy) -> bool {
-    match pull_policy {
-        PullPolicy::Single(None) => true,
-        PullPolicy::Multiple(vec) => vec.is_empty(),
-        _ => false,
+impl fmt::Display for SecurityOpt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
-#[derive(Debug)]
-pub struct SecurityOpt {
-    pub key: String,
-    pub value: String,
+impl FromStr for SecurityOpt {
+    type Err = SecurityOptParseError;
+
+    fn from_str(opt: &str) -> Result<Self, Self::Err> {
+        Self::parse(opt)
+    }
 }
 
-impl Serialize for SecurityOpt {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+impl<'a> Deserialize<'a> for SecurityOpt {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        S: Serializer,
+        D: serde::Deserializer<'a>,
     {
-        let s = format!("{}:{}", self.key, self.value);
-        serializer.serialize_str(&s)
+        let opt = String::deserialize(deserializer)?;
+        Self::parse(opt).map_err(serde::de::Error::custom)
+    }
+}
+
+#[cfg(feature = "sqlx")]
+impl<DB> sqlx::Type<DB> for SecurityOpt
+where
+    DB: sqlx::Database,
+    String: sqlx::Type<DB>,
+{
+    fn type_info() -> DB::TypeInfo {
+        <String as sqlx::Type<DB>>::type_info()
+    }
+
+    fn compatible(ty: &DB::TypeInfo) -> bool {
+        <String as sqlx::Type<DB>>::compatible(ty)
+    }
+}
+
+#[cfg(feature = "sqlx")]
+impl<'a, DB> sqlx::Encode<'a, DB> for SecurityOpt
+where
+    DB: sqlx::Database,
+    String: sqlx::Encode<'a, DB>,
+{
+    fn encode_by_ref(
+        &self,
+        buf: &mut <DB as sqlx::database::HasArguments<'a>>::ArgumentBuffer,
+    ) -> sqlx::encode::IsNull {
+        self.0.encode_by_ref(buf)
+    }
+}
+
+#[cfg(feature = "sqlx")]
+impl<'a, DB> sqlx::Decode<'a, DB> for SecurityOpt
+where
+    DB: sqlx::Database,
+    String: sqlx::Decode<'a, DB>,
+{
+    fn decode(
+        value: <DB as sqlx::database::HasValueRef<'a>>::ValueRef,
+    ) -> Result<Self, Box<dyn std::error::Error + 'static + Send + Sync>> {
+        let value = <String as sqlx::Decode<DB>>::decode(value)?;
+        Ok(SecurityOpt::parse(value)?)
     }
 }
 
 #[cfg(test)]
 mod test {
     use pretty_assertions::assert_eq;
-    use serde_json;
+    use test_strategy::proptest;
 
-    use super::{PullPolicy, SecurityOpt};
+    use super::{OptionSet, PullPolicy, SecurityOpt, SECURITY_OPT_REGEX, SECURITY_OPT_REGEX_STR};
 
-    #[test]
-    fn security_opt_serialization() {
-        let opt = SecurityOpt {
-            key: "warbl".to_string(),
-            value: "garbl".to_string(),
-        };
+    #[proptest]
+    fn parse_valid_security_options(#[strategy(SECURITY_OPT_REGEX_STR)] opt: String) {
+        assert_eq!(opt, SecurityOpt::parse(&opt).unwrap().as_str());
+    }
 
-        let serialized = serde_json::to_string(&opt).unwrap();
-        assert_eq!(serialized, "\"warbl:garbl\"");
+    #[proptest]
+    fn parse_invalid_security_options(#[filter(|o| !SECURITY_OPT_REGEX.is_match(o))] opt: String) {
+        assert!(SecurityOpt::parse(opt).is_err());
     }
 
     #[test]
-    fn test_pull_policy_single_some() {
-        let policy = PullPolicy::Single(Some("single_policy".to_string()));
+    fn pull_policy_serialization() {
+        let policy = PullPolicy::Always;
         let serialized = serde_json::to_string(&policy).unwrap();
-        assert_eq!(serialized, "\"single_policy\"");
-    }
+        assert_eq!(serialized, r#""always""#);
 
-    #[test]
-    fn test_pull_policy_single_none() {
-        let policy = PullPolicy::Single(None);
+        let policy = OptionSet::from(vec![PullPolicy::Always, PullPolicy::IfNotPresent]);
         let serialized = serde_json::to_string(&policy).unwrap();
-        assert_eq!(serialized, "null");
-    }
-
-    #[test]
-    fn test_pull_policy_multiple() {
-        let policy = PullPolicy::Multiple(vec!["policy1".to_string(), "policy2".to_string()]);
-        let serialized = serde_json::to_string(&policy).unwrap();
-        assert_eq!(serialized, "[\"policy1\",\"policy2\"]");
-    }
-
-    #[test]
-    fn test_pull_policy_multiple_empty() {
-        let policy = PullPolicy::Multiple(Vec::new());
-        let serialized = serde_json::to_string(&policy).unwrap();
-        assert_eq!(serialized, "[]");
+        assert_eq!(serialized, r#"["always","if-not-present"]"#);
     }
 }
