@@ -147,7 +147,7 @@ pub struct Docker {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub container_labels: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub services: Vec<Services>,
+    pub services: Vec<Service>,
 }
 
 impl Default for Docker {
@@ -221,7 +221,7 @@ pub struct Sysctls {}
 /// Each service runs in a separate container and is linked to the job.
 /// Further documentation found in the [GitLab Docs](https://archives.docs.gitlab.com/15.11/runner/configuration/advanced-configuration.html#the-runnersdockerservices-section)
 #[derive(Debug, Serialize)]
-pub struct Services {
+pub struct Service {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub alias: Option<String>,
