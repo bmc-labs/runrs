@@ -37,7 +37,10 @@ async fn main() -> miette::Result<()> {
     // initialize router and run app
     let router = app::router(secret, app_state).await;
 
-    if let Err(err) = axum::serve(listener, router).await {
+    if let Err(err) = axum::serve(listener, router)
+        .with_graceful_shutdown(signals::handle_sigint_sigterm())
+        .await
+    {
         tracing::error!(%err, "Server stopped");
         miette::bail!(err);
     }
@@ -66,5 +69,30 @@ mod logging {
         }
 
         Ok(())
+    }
+}
+
+mod signals {
+    use tokio::signal;
+
+    pub async fn handle_sigint_sigterm() {
+        let sigint = async {
+            signal::unix::signal(signal::unix::SignalKind::interrupt())
+                .expect("installing SIGINT (Ctrl+C) handler should never fail")
+                .recv()
+                .await;
+        };
+
+        let sigterm = async {
+            signal::unix::signal(signal::unix::SignalKind::terminate())
+                .expect("installing SIGTERM handler should never fail")
+                .recv()
+                .await;
+        };
+
+        tokio::select! {
+            _ = sigint => {}
+            _ = sigterm => {}
+        }
     }
 }

@@ -7,7 +7,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-\w{20}";
+static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-[\w-]{20}"; // note the hyphen
 static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!("^{RUNNER_TOKEN_REGEX_STR}$"))
         .expect("instantiating RUNNER_TOKEN_REGEX from given static string must not fail")

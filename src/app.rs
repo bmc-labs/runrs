@@ -1,6 +1,6 @@
 // Copyright 2024 bmc::labs GmbH. All rights reserved.
 
-use std::{fs::File, path::PathBuf};
+use std::{fs::File, path::PathBuf, time::Duration};
 
 use axum::{
     middleware,
@@ -8,6 +8,7 @@ use axum::{
     Router,
 };
 use miette::IntoDiagnostic;
+use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -18,8 +19,9 @@ use crate::{
     models,
 };
 
-pub const DEFAULT_DATABASE_URL: &str = "/tmp/runrs.db";
-pub const DEFAULT_CONFIG_PATH: &str = "/tmp/gitlab-runner/config.toml";
+pub static DEFAULT_DATABASE_URL: &str = "/etc/runrs/database.sqlite";
+pub static DEFAULT_CONFIG_PATH: &str = "/etc/gitlab-runner/config.toml";
+pub static REQUEST_TIMEOUT_SECS: u64 = 15;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -66,6 +68,12 @@ pub async fn router(secret: String, app_state: AppState) -> Router {
                 )
                 .layer(middleware::from_fn_with_state(secret, authenticate)),
         )
+        .layer((
+            // outer tracing layer
+            TraceLayer::new_for_http(),
+            // set timeout for all requests
+            TimeoutLayer::new(Duration::from_secs(REQUEST_TIMEOUT_SECS)),
+        ))
         .with_state(app_state)
 }
 
