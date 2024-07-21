@@ -47,8 +47,7 @@ It's a vanilla Rust and `cargo` project, so if you have a recent (1.75+) Rust to
 you should be good. For testing end to end, you'll need:
 
 - Docker, which is going to be used as the executor for your runners, up and running, and
-- `gitlab-runner`, either installed and running locally or running in Docker. The docs for
-  installing it are [here](https://docs.gitlab.com/runner/install/osx.html).
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 It's _also_ a nixified project using a flake, so if you prefer to use that to build it, you can.
 Look at the `flake.nix` for current package targets. In that vein: there is also a
@@ -61,6 +60,10 @@ Look at the `flake.nix` for current package targets. In that vein: there is also
    ```bash
    git clone git@github.com:bmc-labs/runrs.git
    cd runrs
+   ```
+1. Use Docker Compose to run the `gitlab-runner` service with correct setup in Docker.
+   ```bash
+   docker compose up -d
    ```
 1. Build and run the thing.
    ```bash
@@ -77,6 +80,9 @@ nix build
 
 # to build the Docker image:
 nix build .#runrs-docker-image
+
+# after bulding the Docker image, you need to load it:
+docker load < result
 ```
 
 That's it. Make a PR with your changes and we'll talk about them.
