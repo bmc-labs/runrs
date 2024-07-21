@@ -1,8 +1,19 @@
-# Deployment Setup: sync this file to the target server and run
+# Deployment Setup:
 #
-# `docker compose -f compose-deploy.yml up -d`
+# Make sure the environment variable `TOKEN_SECRET` is injected from your secrets in CI. Then,
+# running `docker compose -f compose-deploy.yml up -d` will deploy the latest runrs alongside
+# `gitlab-runner`. If you do so on a host where port 3000 is mapped through to be externally
+# accessible, you can then use the `peripheral` Terraform Provider[0] to create runners.
 #
-# and watch the logs.
+# If you set the environment variables
+#
+# - `DOCKER_HOST`
+# - `DOCKER_TLS_VERIFY`
+# - `DOCKER_CERT_PATH`
+#
+# before running the up command, you can deploy to a remote Docker host.
+#
+# [0]: https://registry.terraform.io/providers/bmc-labs/peripheral/latest/docs
 
 volumes:
   data:

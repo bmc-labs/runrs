@@ -1,9 +1,8 @@
-# Development Setup: in the root directory,
+# Development Setup:
 #
-# - run `docker compose up`
-# - run `cargo run`
-#
-# and re-run `cargo run` whenever you've made changes.
+# In the root directory, run `docker compose up -d`. Then, work on the codebase and run `cargo run`
+# to test your changes. You can manually test creating runners by navigating to the Swagger UI, the
+# link to which is printed when you run `cargo run`.
 
 services:
   gitlab-runner:
