@@ -10,11 +10,11 @@ use thiserror::Error;
 static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-\w{20}";
 static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!("^{RUNNER_TOKEN_REGEX_STR}$"))
-        .expect("unable to instantiate RUNNER_TOKEN_REGEX from given static string")
+        .expect("instantiating RUNNER_TOKEN_REGEX from given static string must not fail")
 });
 
 #[derive(Debug, PartialEq, Eq, Error)]
-#[error("invalid runner token")]
+#[error("invalid runner token; must look like glrt-0123456789_abcdefXYZ")]
 pub struct RunnerTokenParseError;
 
 /// GitLab uses various kinds of tokens for authentication. When registering a runner via the
@@ -32,6 +32,7 @@ pub struct RunnerTokenParseError;
 /// # use glrcfg::runner::RunnerToken;
 /// let runner_token = RunnerToken::parse("glrt-0123456789_abcdefXYZ").unwrap();
 /// assert_eq!(runner_token.as_str(), "glrt-0123456789_abcdefXYZ");
+/// assert!(RunnerToken::parse("warblgarbl").is_err());
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(transparent)]

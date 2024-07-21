@@ -3,7 +3,7 @@ name = "glrcfg"
 description = "A Rust implementation of the GitLab Runner Advanced Configuration file format"
 readme = "README.md"
 
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 license = "Apache-2.0"
@@ -11,7 +11,10 @@ repository.workspace = true
 keywords = ["gitlab", "runner", "runners", "configuration", "config"]
 exclude = [".github"]
 
-authors = ["Florian Eich <florian.eich@bmc-labs.com>"]
+authors = [
+    "Florian Eich <florian.eich@bmc-labs.com>",
+    "Fabio Meier <fabio.meier@bmc-labs.com>",
+]
 
 [dependencies]
 chrono = { version = "0.4.38", default-features = false, features = [
@@ -37,5 +40,6 @@ sqlx = ["dep:sqlx"]
 indoc = "2.0.5"
 pretty_assertions = "1.4.0"
 proptest = "1.5.0"
+serde_json = "1.0.120"
 test-strategy = "0.4.0"
 toml = "0.8.12"
