@@ -81,7 +81,7 @@ nix build
 # to build the Docker image:
 nix build .#runrs-docker-image
 
-# after bulding the Docker image, you need to load it:
+# after building the Docker image, you need to load it:
 docker load < result
 ```
 
