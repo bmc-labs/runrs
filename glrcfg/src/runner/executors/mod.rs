@@ -2,7 +2,7 @@
 
 mod docker;
 
-pub use docker::{Docker, OptionSet, SecurityOpt, Service, Sysctls};
+pub use docker::{Docker, MaybeMultiple, PullPolicy, SecurityOpt, Service, Sysctls};
 use serde::Serialize;
 
 /// The following executors are available.

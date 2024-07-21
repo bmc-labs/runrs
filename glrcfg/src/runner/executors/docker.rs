@@ -2,13 +2,12 @@
 
 use std::{fmt, str::FromStr};
 
-use indexmap::IndexSet;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-static SECURITY_OPT_REGEX_STR: &str = r"[a-zA-Z]\w*:\w+";
+static SECURITY_OPT_REGEX_STR: &str = r".+:.+";
 static SECURITY_OPT_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!("^{SECURITY_OPT_REGEX_STR}$"))
         .expect("instantiating SECURITY_OPT_REGEX from given static string must not fail")
@@ -38,8 +37,8 @@ pub struct Docker {
     pub allowed_images: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_privileged_images: Vec<String>,
-    #[serde(skip_serializing_if = "OptionSet::is_none")]
-    pub allowed_pull_policies: OptionSet<PullPolicy>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allowed_pull_policies: Option<Vec<PullPolicy>>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub allowed_services: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -111,8 +110,8 @@ pub struct Docker {
     /// Default determined from `gitlab-runner` CLI runner creation.
     pub privileged: bool,
     /// Default determined from GitLab documentation.
-    #[serde(skip_serializing_if = "OptionSet::is_none")]
-    pub pull_policy: OptionSet<PullPolicy>,
+    #[serde(skip_serializing_if = "MaybeMultiple::is_none")]
+    pub pull_policy: MaybeMultiple<PullPolicy>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub runtime: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -190,7 +189,7 @@ impl Default for Docker {
             oom_kill_disable: false,
             oom_score_adjust: None,
             privileged: false,
-            pull_policy: OptionSet::Some(PullPolicy::Always),
+            pull_policy: MaybeMultiple::Some(PullPolicy::Always),
             runtime: None,
             isolation: None,
             security_opt: Vec::new(),
@@ -247,46 +246,65 @@ pub struct Service {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all(serialize = "kebab-case"))]
 pub enum PullPolicy {
-    Always,
-    IfNotPresent,
-    Never,
+    Always,       // "always"
+    IfNotPresent, // "if-not-present"
+    Never,        // "never"
 }
 
-/// An [`Option`], with in addition to `None` and `Some(T)`, there is `Set(HashSet<T>)`.
+/// An [`Option`], with in addition to `None` and `Some(T)`, there is `Vec(Vec<T>)`.
 ///
-/// As with a regular [`Option`], the default is `None`. There is also an [`OptionSet::is_none()`]
-/// method. Other than that, the API of `OptionSet` is clearly much more limited than that of
+/// As with a regular [`Option`], the default is `None`. There is also an [`MaybeMultiple::is_none()`]
+/// method. Other than that, the API of `MaybeMultiple` is clearly much more limited than that of
 /// [`Option`], since we only implement what we need for the library.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(untagged)]
-pub enum OptionSet<T> {
+pub enum MaybeMultiple<T> {
     None,
     Some(T),
-    Set(IndexSet<T>),
+    Multiple(Vec<T>),
 }
 
-impl<T> OptionSet<T> {
+impl<T> MaybeMultiple<T> {
     pub fn is_none(&self) -> bool {
         matches!(self, Self::None)
     }
 }
 
-impl<T> Default for OptionSet<T> {
+impl<T> Default for MaybeMultiple<T> {
     fn default() -> Self {
         Self::None
     }
 }
 
-impl From<PullPolicy> for OptionSet<PullPolicy> {
+/// Enables the following usage pattern:
+///
+/// ```rust
+/// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
+/// let docker = Docker { pull_policy: PullPolicy::Always.into(), ..Default::default() };
+/// # assert_eq!(docker.pull_policy, MaybeMultiple::Some(PullPolicy::Always));
+/// ```
+impl From<PullPolicy> for MaybeMultiple<PullPolicy> {
     fn from(pull_policy: PullPolicy) -> Self {
         Self::Some(pull_policy)
     }
 }
 
-impl From<Vec<PullPolicy>> for OptionSet<PullPolicy> {
+/// Enables the following usage pattern:
+///
+/// ```rust
+/// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
+/// let docker = Docker {
+///     pull_policy: vec![PullPolicy::Always, PullPolicy::IfNotPresent].into(),
+///     ..Default::default()
+/// };
+/// # assert_eq!(
+/// #     docker.pull_policy,
+/// #     MaybeMultiple::Multiple(vec![PullPolicy::Always, PullPolicy::IfNotPresent])
+/// # );
+/// ```
+impl From<Vec<PullPolicy>> for MaybeMultiple<PullPolicy> {
     fn from(pull_policies: Vec<PullPolicy>) -> Self {
-        let pull_policies = pull_policies.into_iter().collect();
-        Self::Set(pull_policies)
+        Self::Multiple(pull_policies)
     }
 }
 
@@ -294,8 +312,7 @@ impl From<Vec<PullPolicy>> for OptionSet<PullPolicy> {
 #[error("invalid security option; must be a key:value pair")]
 pub struct SecurityOptParseError;
 
-/// Security option (`–security-opt` in `docker run`). Must be a `key:value` pair. Keys must start
-/// with a letter.
+/// Security option (`–security-opt` in `docker run`). Must be a `key:value` pair.
 ///
 /// # Example
 ///
@@ -303,7 +320,6 @@ pub struct SecurityOptParseError;
 /// # use glrcfg::runner::SecurityOpt;
 /// let security_opt = SecurityOpt::parse("key:value").unwrap();
 /// assert_eq!(security_opt.as_str(), "key:value");
-/// assert!(SecurityOpt::parse("42key:value").is_err());
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SecurityOpt(String);
@@ -403,7 +419,9 @@ mod test {
     use pretty_assertions::assert_eq;
     use test_strategy::proptest;
 
-    use super::{OptionSet, PullPolicy, SecurityOpt, SECURITY_OPT_REGEX, SECURITY_OPT_REGEX_STR};
+    use super::{
+        MaybeMultiple, PullPolicy, SecurityOpt, SECURITY_OPT_REGEX, SECURITY_OPT_REGEX_STR,
+    };
 
     #[proptest]
     fn parse_valid_security_options(#[strategy(SECURITY_OPT_REGEX_STR)] opt: String) {
@@ -421,7 +439,7 @@ mod test {
         let serialized = serde_json::to_string(&policy).unwrap();
         assert_eq!(serialized, r#""always""#);
 
-        let policy = OptionSet::from(vec![PullPolicy::Always, PullPolicy::IfNotPresent]);
+        let policy = MaybeMultiple::from(vec![PullPolicy::Always, PullPolicy::IfNotPresent]);
         let serialized = serde_json::to_string(&policy).unwrap();
         assert_eq!(serialized, r#"["always","if-not-present"]"#);
     }

@@ -650,7 +650,6 @@ name = "glrcfg"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "indexmap",
  "indoc",
  "once_cell",
  "pretty_assertions",
