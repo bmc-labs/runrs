@@ -1,0 +1,30 @@
+# Deployment Setup: sync this file to the target server and run
+#
+# `docker compose -f compose-deploy.yml up -d`
+#
+# and watch the logs.
+
+volumes:
+  data:
+
+services:
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    restart: always
+    volumes:
+      - data:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  runrs:
+    image: ghcr.io/bmc-labs/runrs:latest
+    restart: always
+    environment:
+      RUST_LOG: "error,runrs=warn"
+      LOG_FMT: "plain"
+      DATABASE_URL: "/etc/gitlab-runner/runrs.sqlite"
+      CONFIG_PATH: "/etc/gitlab-runner/config.toml"
+      SECRET: "${TOKEN_SECRET}"
+    ports:
+      - 3000:3000
+    volumes:
+      - data:/etc/gitlab-runner
