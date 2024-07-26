@@ -2,6 +2,7 @@
 
 use std::{fmt, str::FromStr};
 
+use nonempty::NonEmpty;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -261,7 +262,7 @@ pub enum PullPolicy {
 pub enum MaybeMultiple<T> {
     None,
     Some(T),
-    Multiple(Vec<T>),
+    Multiple(NonEmpty<T>),
 }
 
 impl<T> MaybeMultiple<T> {
@@ -281,7 +282,8 @@ impl<T> Default for MaybeMultiple<T> {
 /// ```rust
 /// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
 /// let docker = Docker { pull_policy: PullPolicy::Always.into(), ..Default::default() };
-/// # assert_eq!(docker.pull_policy, MaybeMultiple::Some(PullPolicy::Always));
+///
+/// assert_eq!(docker.pull_policy, MaybeMultiple::Some(PullPolicy::Always));
 /// ```
 impl From<PullPolicy> for MaybeMultiple<PullPolicy> {
     fn from(pull_policy: PullPolicy) -> Self {
@@ -293,18 +295,63 @@ impl From<PullPolicy> for MaybeMultiple<PullPolicy> {
 ///
 /// ```rust
 /// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
+/// use nonempty::nonempty;
+/// let docker = Docker {
+///     pull_policy: nonempty![PullPolicy::Always, PullPolicy::IfNotPresent].into(),
+///     ..Default::default()
+/// };
+///
+/// assert_eq!(
+///     docker.pull_policy,
+///     MaybeMultiple::Multiple(nonempty![PullPolicy::Always, PullPolicy::IfNotPresent])
+/// );
+/// ```
+impl From<NonEmpty<PullPolicy>> for MaybeMultiple<PullPolicy> {
+    fn from(pull_policies: NonEmpty<PullPolicy>) -> Self {
+        Self::Multiple(pull_policies)
+    }
+}
+
+/// Enables the following usage pattern:
+///
+/// ```rust
+/// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
+/// # use nonempty::nonempty;
 /// let docker = Docker {
 ///     pull_policy: vec![PullPolicy::Always, PullPolicy::IfNotPresent].into(),
 ///     ..Default::default()
 /// };
-/// # assert_eq!(
-/// #     docker.pull_policy,
-/// #     MaybeMultiple::Multiple(vec![PullPolicy::Always, PullPolicy::IfNotPresent])
-/// # );
+///
+/// assert_eq!(
+///     docker.pull_policy,
+///     MaybeMultiple::Multiple(nonempty![PullPolicy::Always, PullPolicy::IfNotPresent])
+/// );
 /// ```
 impl From<Vec<PullPolicy>> for MaybeMultiple<PullPolicy> {
-    fn from(pull_policies: Vec<PullPolicy>) -> Self {
-        Self::Multiple(pull_policies)
+    fn from(mut v: Vec<PullPolicy>) -> Self {
+        match v.len() {
+            0 => Self::None,
+            1 => Self::Some(v.pop().expect("input vec has one element")),
+            _ => Self::Multiple(NonEmpty::from_vec(v).expect("input vec has multiple elements")),
+        }
+    }
+}
+
+/// Enables the following usage pattern:
+///
+/// ```rust
+/// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
+/// let pull_policy: Vec<PullPolicy> = MaybeMultiple::from(PullPolicy::Always).into();
+///
+/// assert_eq!(pull_policy, vec![PullPolicy::Always]);
+/// ```
+impl From<MaybeMultiple<PullPolicy>> for Vec<PullPolicy> {
+    fn from(maybe_multiple: MaybeMultiple<PullPolicy>) -> Self {
+        match maybe_multiple {
+            MaybeMultiple::None => vec![],
+            MaybeMultiple::Some(v) => vec![v],
+            MaybeMultiple::Multiple(n) => n.into(),
+        }
     }
 }
 

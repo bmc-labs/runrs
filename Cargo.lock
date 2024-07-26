@@ -651,6 +651,7 @@ version = "0.2.0"
 dependencies = [
  "chrono",
  "indoc",
+ "nonempty",
  "once_cell",
  "pretty_assertions",
  "proptest",
@@ -1140,6 +1141,15 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
+]
+
+[[package]]
+name = "nonempty"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "303e8749c804ccd6ca3b428de7fe0d86cb86bc7606bc15291f100fd487960bb8"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
