@@ -2,6 +2,7 @@
 
 use std::{fmt, str::FromStr};
 
+use maybe_multiple::MaybeMultiple;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -251,63 +252,6 @@ pub enum PullPolicy {
     Never,        // "never"
 }
 
-/// An [`Option`], with in addition to `None` and `Some(T)`, there is `Vec(Vec<T>)`.
-///
-/// As with a regular [`Option`], the default is `None`. There is also an [`MaybeMultiple::is_none()`]
-/// method. Other than that, the API of `MaybeMultiple` is clearly much more limited than that of
-/// [`Option`], since we only implement what we need for the library.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(untagged)]
-pub enum MaybeMultiple<T> {
-    None,
-    Some(T),
-    Multiple(Vec<T>),
-}
-
-impl<T> MaybeMultiple<T> {
-    pub fn is_none(&self) -> bool {
-        matches!(self, Self::None)
-    }
-}
-
-impl<T> Default for MaybeMultiple<T> {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
-/// Enables the following usage pattern:
-///
-/// ```rust
-/// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
-/// let docker = Docker { pull_policy: PullPolicy::Always.into(), ..Default::default() };
-/// # assert_eq!(docker.pull_policy, MaybeMultiple::Some(PullPolicy::Always));
-/// ```
-impl From<PullPolicy> for MaybeMultiple<PullPolicy> {
-    fn from(pull_policy: PullPolicy) -> Self {
-        Self::Some(pull_policy)
-    }
-}
-
-/// Enables the following usage pattern:
-///
-/// ```rust
-/// # use glrcfg::runner::{Docker, PullPolicy, MaybeMultiple};
-/// let docker = Docker {
-///     pull_policy: vec![PullPolicy::Always, PullPolicy::IfNotPresent].into(),
-///     ..Default::default()
-/// };
-/// # assert_eq!(
-/// #     docker.pull_policy,
-/// #     MaybeMultiple::Multiple(vec![PullPolicy::Always, PullPolicy::IfNotPresent])
-/// # );
-/// ```
-impl From<Vec<PullPolicy>> for MaybeMultiple<PullPolicy> {
-    fn from(pull_policies: Vec<PullPolicy>) -> Self {
-        Self::Multiple(pull_policies)
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Error)]
 #[error("invalid security option; must be a key:value pair")]
 pub struct SecurityOptParseError;
@@ -439,7 +383,7 @@ mod test {
         let serialized = serde_json::to_string(&policy).unwrap();
         assert_eq!(serialized, r#""always""#);
 
-        let policy = MaybeMultiple::from(vec![PullPolicy::Always, PullPolicy::IfNotPresent]);
+        let policy = MaybeMultiple::from_vec(vec![PullPolicy::Always, PullPolicy::IfNotPresent]);
         let serialized = serde_json::to_string(&policy).unwrap();
         assert_eq!(serialized, r#"["always","if-not-present"]"#);
     }
