@@ -144,4 +144,22 @@ mod test {
     fn parse_invalid_runner_tokens(#[filter(|t| !RUNNER_TOKEN_REGEX.is_match(t))] token: String) {
         assert!(RunnerToken::parse(token).is_err());
     }
+
+    #[test]
+    fn parse_known_valid_runner_tokens() {
+        let token = "glrt-ZJAbdjMq-ViUVE_zd1VD";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-6tS-PTLZLdzKDq-5mZvx";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-dmayYi77SP-5fTibBcH3";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-4dFJv-Y6cBpEdWV774zx";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-YypxpG7h-rhrViUVar6F";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+    }
 }
