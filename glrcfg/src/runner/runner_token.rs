@@ -7,7 +7,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-[\w-]{20}"; // note the hyphen
+static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-[\w-]{16,32}"; // note the hyphen
 static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!("^{RUNNER_TOKEN_REGEX_STR}$"))
         .expect("instantiating RUNNER_TOKEN_REGEX from given static string must not fail")
@@ -22,9 +22,9 @@ pub struct RunnerTokenParseError;
 /// the `gitlab-runner`  binary via the `--token` argument, or, as is the intention here, via the
 /// configuration file.
 ///
-/// Valid tokens start with `glrt-`, followed by exactly 20 alphanumeric characters. An
-/// alphanumeric character is one which matches the regular expression `[a-zA-Z0-9_]` (note the
-/// underscore being part of the allowed characters).
+/// Valid tokens start with `glrt-`, followed by at least 16 and at most 32 alphanumeric
+/// characters, plus underscore. An alphanumeric character is one which matches the regular
+/// expression `[a-zA-Z0-9_]` (note the underscore being part of the allowed characters).
 ///
 /// # Example
 ///
@@ -160,6 +160,9 @@ mod test {
         assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
 
         let token = "glrt-YypxpG7h-rhrViUVar6F";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-t1_NQbUXcKbPbCkJzzVDnmu";
         assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
     }
 }
