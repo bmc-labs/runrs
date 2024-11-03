@@ -5,13 +5,10 @@
 # `gitlab-runner`. If you do so on a host where port 3000 is mapped through to be externally
 # accessible, you can then use the `peripheral` Terraform Provider[0] to create runners.
 #
-# If you set the environment variables
-#
-# - `DOCKER_HOST`
-# - `DOCKER_TLS_VERIFY`
-# - `DOCKER_CERT_PATH`
-#
-# before running the up command, you can deploy to a remote Docker host.
+# If you set the environment variables `DOCKER_HOST` to an external Docker host (which should look
+# like `export DOCKER_HOST="ssh://user@external-docker-host"`, where `user` is in the `docker` group
+# or able to access Docker for another reason) before running the up command, you can deploy to that
+# remote Docker host.
 #
 # [0]: https://registry.terraform.io/providers/bmc-labs/peripheral/latest/docs
 
@@ -36,6 +33,6 @@ services:
       CONFIG_PATH: "/etc/gitlab-runner/config.toml"
       SECRET: "${TOKEN_SECRET}"
     ports:
-      - 3000:3000
+      - 80:3000
     volumes:
       - data:/etc/gitlab-runner

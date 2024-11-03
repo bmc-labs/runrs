@@ -5,7 +5,7 @@ members = [".", "glrcfg"]
 description = "A microservice to manage GitLab Runners in Docker via REST"
 readme = "README.md"
 
-version = "0.6.1"
+version = "0.6.2"
 edition = "2021"
 
 license = "Apache-2.0"
