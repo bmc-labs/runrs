@@ -41,8 +41,8 @@ pub struct GitLabRunner {
     /// GitLab instance URL
     #[schema(value_type = String, format = Uri, example = "https://gitlab.your-company.com")]
     url: Url,
-    /// Runner token, obtained from the GitLab instance. Format: `glrt-` followed by 20 characters
-    /// from the set `[0-9a-f_]`.
+    /// Runner token, obtained from the GitLab instance. See [documentation of the `glrcfg`
+    /// crate](https://docs.rs/glrcfg/latest/glrcfg/runner/struct.RunnerToken.html) for details.
     #[schema(value_type = String, example = "glrt-0123456789_abcdefXYZ")]
     token: RunnerToken,
     #[serde(default = "DateTime::now")]
