@@ -14,8 +14,8 @@ static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
 });
 
 #[derive(Debug, PartialEq, Eq, Error)]
-#[error("invalid runner token; must look like glrt-0123456789_abcdefXYZ")]
-pub struct RunnerTokenParseError;
+#[error("invalid runner token `{0}`; must look like glrt-0123456789_abcdefXYZ")]
+pub struct RunnerTokenParseError(String);
 
 /// GitLab uses various kinds of tokens for authentication. When registering a runner via the
 /// GitLab UI, a runner token is generated and presented to the user. It must then be provided to
@@ -49,7 +49,7 @@ impl RunnerToken {
         if !RUNNER_TOKEN_REGEX.is_match(&token) {
             #[cfg(feature = "tracing")]
             tracing::error!("invalid runner token: {token}");
-            return Err(RunnerTokenParseError);
+            return Err(RunnerTokenParseError(token));
         }
 
         Ok(Self(token))
@@ -163,6 +163,12 @@ mod test {
         assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
 
         let token = "glrt-t1_NQbUXcKbPbCkJzzVDnmu";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-Cm8DYQiTeGJMVzcW4hyx";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-t1_CkM3EZEjJ84ts_tYyVCB";
         assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
     }
 }
