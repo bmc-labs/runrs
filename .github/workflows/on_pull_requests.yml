@@ -25,10 +25,13 @@ jobs:
     needs: [ build, typos ]
     steps:
       - uses: actions/checkout@v4
-      - uses: webfactory/ssh-agent@v0.9.0
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - uses: hoverkraft-tech/compose-action@v2.0.1
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - name: Deploy via Docker Compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
         with:
           compose-file: "./compose-deploy.yml"
         env:
