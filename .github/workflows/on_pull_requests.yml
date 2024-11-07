@@ -31,9 +31,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
       - name: Deploy via Docker Compose
-        uses: hoverkraft-tech/compose-action@v2.0.1
-        with:
-          compose-file: "./compose-deploy.yml"
-        env:
-          DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
-          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
+        run: |
+          export DOCKER_HOST="${{ secrets.DOCKER_HOST }}"
+          export TOKEN_SECRET="${{ secrets.TOKEN_SECRET }}"
+          docker compose -f compose-deploy.yml up -d
