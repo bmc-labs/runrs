@@ -22,7 +22,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [ build, typos ]
     steps:
       - uses: actions/checkout@v4
       - uses: webfactory/ssh-agent@v0.9.0
