@@ -25,6 +25,7 @@ services:
 
   runrs:
     image: ghcr.io/bmc-labs/runrs:latest
+    pull_policy: always
     restart: always
     environment:
       RUST_LOG: "error,runrs=warn"
