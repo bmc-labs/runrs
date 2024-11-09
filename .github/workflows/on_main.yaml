@@ -21,10 +21,8 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-        with:
-          ssh-key: "${{secrets.DEPLOY_KEY}}"
       - uses: manoadamro/rust-release@v1
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.repository }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
