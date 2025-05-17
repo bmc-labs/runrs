@@ -7,7 +7,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-[\w-]{16,32}"; // note the hyphen
+static RUNNER_TOKEN_REGEX_STR: &str = r"glrt-.{8,128}"; // note the hyphen
 static RUNNER_TOKEN_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!("^{RUNNER_TOKEN_REGEX_STR}$"))
         .expect("instantiating RUNNER_TOKEN_REGEX from given static string must not fail")
@@ -22,9 +22,10 @@ pub struct RunnerTokenParseError(String);
 /// the `gitlab-runner`  binary via the `--token` argument, or, as is the intention here, via the
 /// configuration file.
 ///
-/// Valid tokens start with `glrt-`, followed by at least 16 and at most 32 alphanumeric
-/// characters, plus underscore. An alphanumeric character is one which matches the regular
-/// expression `[a-zA-Z0-9_]` (note the underscore being part of the allowed characters).
+/// Valid tokens start with `glrt-`, followed by at least 8 and at most 128 arbitrary characters.
+/// In fact, GitLab [does not state the length
+/// limitation](https://docs.gitlab.com/runner/register/#register-with-a-runner-authentication-token),
+/// which we find unfortunate, so we hope that the 8 to 128 limitation we introduce holds.
 ///
 /// # Example
 ///
@@ -169,6 +170,9 @@ mod test {
         assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
 
         let token = "glrt-t1_CkM3EZEjJ84ts_tYyVCB";
+        assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
+
+        let token = "glrt-YcctAV333kFrL8mjJLHvImc6MwpvOjEKdDoyCnU6Mg8.01.171gbi699";
         assert_eq!(token, RunnerToken::parse(token).unwrap().as_str());
     }
 }
