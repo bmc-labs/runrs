@@ -11,7 +11,6 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       rust-overlay,
       crane,

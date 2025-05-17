@@ -3,8 +3,8 @@ name = "glrcfg"
 description = "A Rust implementation of the GitLab Runner Advanced Configuration file format"
 readme = "README.md"
 
-version = "0.2.3"
-edition = "2021"
+version = "0.2.4"
+edition = "2024"
 
 license = "Apache-2.0"
 repository.workspace = true
