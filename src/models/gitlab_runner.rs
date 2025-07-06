@@ -7,6 +7,10 @@ use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 
+macro_rules! stringvec {
+    ($($x:expr),*) => (vec![$($x.to_string()),*]);
+}
+
 fn default_name() -> String {
     let mut generator = Generator::with_naming(Name::Numbered);
     generator.next().unwrap_or_else(|| "usain-bolt".to_string())
@@ -69,6 +73,9 @@ impl From<GitLabRunner> for Runner {
             executor: Executor::Docker {
                 docker: Docker {
                     image: runner.docker_image,
+                    // connect the docker socket from the host into all runner containers, enabling
+                    // them to access the host's docker daemon for pulling and pushing images
+                    volumes: stringvec!["/var/run/docker.sock:/var/run/docker.sock", "/cache"],
                     ..Default::default()
                 },
             },
